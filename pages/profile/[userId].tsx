@@ -1,6 +1,6 @@
 import React from "react";
 import { GetServerSidePropsContext } from "next";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../utils/primsa";
 import { UserResponse } from "../../types/userTypes";
 import { InferGetServerSidePropsType } from "next";
 import Navigation from "../../Layout/Navigation";
@@ -26,7 +26,6 @@ const UserProfile = ({
 export const getServerSideProps = async ({
   query: { userId },
 }: GetServerSidePropsContext) => {
-  const prisma = new PrismaClient();
   const user = await prisma.user.findFirst({
     where: {
       id: userId as string,
@@ -48,7 +47,7 @@ export const getServerSideProps = async ({
       email: user.email as string,
       image: user.image,
     };
-    if (user.accounts)
+    if (user.accounts.length)
       return {
         props: {
           userData: response,

@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import errorHandler from "../../../../API_middleware/errorHandler";
 import withAuth from "../../../../API_middleware/withAuth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../../../utils/primsa";
 import { z } from "zod";
-
-const prisma = new PrismaClient();
 
 interface Data {
   message: string;
