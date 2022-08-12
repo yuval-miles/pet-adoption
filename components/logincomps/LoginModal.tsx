@@ -1,6 +1,6 @@
 import { Box, Button, Fade, Modal, Stack } from "@mui/material";
 import React, { useState } from "react";
-import CreateUserForm from "./CreateUserForm";
+import CreateUserOrEditForm from "../CreateUserOrEditForm";
 import LoginForm from "./LoginForm";
 
 const style = {
@@ -40,7 +40,7 @@ const LoginModal = ({
             {showLogin ? (
               <LoginForm handleCloseModal={handleCloseModal} />
             ) : (
-              <CreateUserForm handleCloseModal={handleCloseModal} />
+              <CreateUserOrEditForm handleCloseModal={handleCloseModal} />
             )}
             <Button
               variant="text"

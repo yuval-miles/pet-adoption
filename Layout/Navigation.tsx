@@ -19,7 +19,6 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 const Navigation = ({ children }: { children: React.ReactNode }) => {
   const { data, status } = useSession();
-  console.log(status, data);
   const [open, setOpen] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);
   const handleOpenModal = () => setOpenModal(true);

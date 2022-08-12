@@ -1,9 +1,21 @@
 import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import PetsIcon from "@mui/icons-material/Pets";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 const drawerWidth = 240;
 
@@ -54,6 +66,22 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
+type NavList = Array<{
+  text: string;
+  icon: JSX.Element;
+  route: string;
+}>;
+
+const unAuthNavList: NavList = [
+  { text: "Search Pets", icon: <SearchIcon />, route: "" },
+];
+
+const authNavList: NavList = [
+  { text: "Search Pets", icon: <SearchIcon />, route: "" },
+  { text: "My Pets", icon: <PetsIcon />, route: "" },
+  { text: "Settings", icon: <SettingsIcon />, route: "" },
+];
+
 const DrawerComp = ({
   open,
   handleDrawerClose,
@@ -61,7 +89,14 @@ const DrawerComp = ({
   open: boolean;
   handleDrawerClose: () => void;
 }) => {
+  const { status } = useSession();
+  const router = useRouter();
   const theme = useTheme();
+  const [navigation, setNavigation] = useState<NavList>(unAuthNavList);
+  useEffect(() => {
+    if (status === "authenticated") setNavigation(authNavList);
+    else if (status === "unauthenticated") setNavigation(unAuthNavList);
+  }, [status]);
   return (
     <Drawer variant="permanent" open={open}>
       <DrawerHeader>
@@ -73,6 +108,30 @@ const DrawerComp = ({
           )}
         </IconButton>
       </DrawerHeader>
+      <List>
+        {navigation.map((el) => (
+          <ListItem key={el.text} disablePadding sx={{ display: "block" }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? "initial" : "center",
+                px: 2.5,
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : "auto",
+                  justifyContent: "center",
+                }}
+              >
+                {el.icon}
+              </ListItemIcon>
+              <ListItemText primary={el.text} sx={{ opacity: open ? 1 : 0 }} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
     </Drawer>
   );
 };

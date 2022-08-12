@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import errorHandler from "../../../API_middleware/errorHandler";
 import { PrismaClient } from "@prisma/client";
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -23,11 +24,8 @@ const emailValidator: RegExp =
 const phoneNumberValidator: RegExp =
   /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
-  try {
+export default errorHandler(
+  async (req: NextApiRequest, res: NextApiResponse<Data>) => {
     const { method, body } = req;
     bodySchema.parse(body);
     const { email, password, phoneNumber, firstName, lastName } = req.body;
@@ -42,7 +40,6 @@ export default async function handler(
             .json({ message: "failed", response: "Validation failed" });
         const hashPass = bcrypt.hashSync(password, 10);
         req.body.password = hashPass;
-        req.body.name = firstName + " " + lastName;
         const newUser = await prisma.user.create({ data: body });
         res.status(200).json({ message: "success", response: newUser });
         break;
@@ -53,11 +50,5 @@ export default async function handler(
           response: `Method ${method} Not Allowed`,
         });
     }
-  } catch (err) {
-    if (err instanceof ZodError)
-      res.status(400).json({ message: "failed", response: err.errors });
-    else if (err instanceof Error)
-      res.status(500).json({ message: "failed", response: err.message });
-    else res.status(500).json({ message: "failed", response: "Unknown error" });
   }
-}
+);

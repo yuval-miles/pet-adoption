@@ -54,6 +54,9 @@ export default NextAuth({
       return session;
     },
   },
-  secret: process.env.JWT_SECRET,
+  secret: process.env.NEXT_SECRET,
   adapter: PrismaAdapter(prisma),
+  pages: {
+    signIn: "/",
+  },
 });

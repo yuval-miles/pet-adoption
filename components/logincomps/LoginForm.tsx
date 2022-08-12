@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Box, Button, Stack, TextField, InputAdornment } from "@mui/material";
+import {
+  Box,
+  Button,
+  Stack,
+  TextField,
+  InputAdornment,
+  Collapse,
+  Alert,
+} from "@mui/material";
 import { signIn } from "next-auth/react";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -11,10 +19,12 @@ const LoginForm = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
     password: string;
     email: string;
     showPassword: boolean;
+    showError: boolean;
   }>({
     password: "",
     email: "",
     showPassword: false,
+    showError: false,
   });
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,12 +34,19 @@ const LoginForm = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
       password: input.password,
     });
     if (!response?.error) handleCloseModal();
-    else console.log(response.error);
+    else {
+      if (response.error === "CredentialsSignin")
+        setInput((state) => ({ ...state, showError: true }));
+    }
   };
   const handleChange =
     (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setInput({ ...input, [field as keyof typeof input]: e.target.value });
+      setInput({
+        ...input,
+        [field as keyof typeof input]: e.target.value,
+        showError: false,
+      });
     };
   return (
     <Box component="form" onSubmit={handleSubmit}>
@@ -75,6 +92,9 @@ const LoginForm = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
           }}
           onChange={handleChange("password")}
         ></TextField>
+        <Collapse in={input.showError}>
+          <Alert severity="error">Email or password is incorrect</Alert>
+        </Collapse>
         <Button type="submit" variant="contained">
           Login
         </Button>
