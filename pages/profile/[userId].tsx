@@ -6,20 +6,38 @@ import { InferGetServerSidePropsType } from "next";
 import Navigation from "../../Layout/Navigation";
 import CreateUserOrEditForm from "../../components/CreateUserOrEditForm";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { Box } from "@mui/material";
 
 const UserProfile = ({
   userData,
   provider,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  const router = useRouter();
+  useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/");
+    },
+  });
   const { userId } = useRouter().query;
   if (!userData || typeof userId !== "string") return <></>;
   return (
-    <CreateUserOrEditForm
-      isEditForm
-      userData={userData}
-      userId={userId}
-      provider={provider ? provider : undefined}
-    />
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "calc(100vh - 120px)",
+      }}
+    >
+      <CreateUserOrEditForm
+        isEditForm
+        userData={userData}
+        userId={userId}
+        provider={provider ? provider : undefined}
+      />
+    </Box>
   );
 };
 

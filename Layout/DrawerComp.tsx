@@ -13,9 +13,13 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import PetsIcon from "@mui/icons-material/Pets";
-import SettingsIcon from "@mui/icons-material/Settings";
+import {
+  NavList,
+  unAuthNavList,
+  authNavList,
+  Routes,
+  adminNavList,
+} from "./navLists/index";
 
 const drawerWidth = 240;
 
@@ -66,22 +70,6 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-type NavList = Array<{
-  text: string;
-  icon: JSX.Element;
-  route: string;
-}>;
-
-const unAuthNavList: NavList = [
-  { text: "Search Pets", icon: <SearchIcon />, route: "" },
-];
-
-const authNavList: NavList = [
-  { text: "Search Pets", icon: <SearchIcon />, route: "" },
-  { text: "My Pets", icon: <PetsIcon />, route: "" },
-  { text: "Settings", icon: <SettingsIcon />, route: "" },
-];
-
 const DrawerComp = ({
   open,
   handleDrawerClose,
@@ -89,14 +77,27 @@ const DrawerComp = ({
   open: boolean;
   handleDrawerClose: () => void;
 }) => {
-  const { status } = useSession();
+  const { status, data } = useSession();
   const router = useRouter();
   const theme = useTheme();
   const [navigation, setNavigation] = useState<NavList>(unAuthNavList);
   useEffect(() => {
-    if (status === "authenticated") setNavigation(authNavList);
-    else if (status === "unauthenticated") setNavigation(unAuthNavList);
-  }, [status]);
+    if (status === "authenticated") {
+      if (data.role === "user") setNavigation(authNavList);
+      else if (data.role === "admin") setNavigation(adminNavList);
+    } else if (status === "unauthenticated") setNavigation(unAuthNavList);
+  }, [status, data?.role]);
+  const handleClick = (route: Routes) => () => {
+    if (
+      route === "/profile/[userId]" &&
+      data &&
+      router.pathname !== "/profile/[userId]"
+    )
+      router.push(route.replace("[userId]", data.id as string));
+    else if (route === "/" && data && router.pathname !== "/") router.push("/");
+    else if (route === "/addpet" && router.pathname !== "/addpet")
+      router.push("/addpet");
+  };
   return (
     <Drawer variant="permanent" open={open}>
       <DrawerHeader>
@@ -117,12 +118,14 @@ const DrawerComp = ({
                 justifyContent: open ? "initial" : "center",
                 px: 2.5,
               }}
+              onClick={handleClick(el.route)}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 0,
                   mr: open ? 3 : "auto",
                   justifyContent: "center",
+                  color: router.pathname === el.route ? "#0288d1" : "grey",
                 }}
               >
                 {el.icon}

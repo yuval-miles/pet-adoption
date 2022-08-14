@@ -18,6 +18,9 @@ const withAuth = (
           throw new Error("Unauthorized");
         }
       }
+      if (options?.admin) {
+        if (token.role !== "admin") throw new Error("Unauthorized");
+      }
       return handler(req, res);
     } else throw new Error("Unauthorized");
   };

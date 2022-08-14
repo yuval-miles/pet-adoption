@@ -8,6 +8,9 @@ export default withAuth({
         case req.nextUrl.pathname.startsWith("/profile"):
           if (token.id === req.nextUrl.pathname.split("/")[2]) return true;
           else return false;
+        case req.nextUrl.pathname === "/addpet":
+          if (token.role === "admin") return true;
+          else return false;
         default:
           return false;
       }
@@ -15,4 +18,4 @@ export default withAuth({
   },
 });
 
-export const config = { matcher: ["/profile/:userId"] };
+export const config = { matcher: ["/profile/:userId", "/addpet"] };

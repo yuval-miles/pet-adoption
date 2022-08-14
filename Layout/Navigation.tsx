@@ -5,9 +5,6 @@ import AppbarComp from "./AppbarComp";
 import DrawerComp from "./DrawerComp";
 import React from "react";
 import LoginModal from "../components/logincomps/LoginModal";
-import { useSession } from "next-auth/react";
-
-const drawerWidth = 240;
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -18,7 +15,6 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const Navigation = ({ children }: { children: React.ReactNode }) => {
-  const { data, status } = useSession();
   const [open, setOpen] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);
   const handleOpenModal = () => setOpenModal(true);

@@ -8,6 +8,7 @@ import {
   Alert,
   Collapse,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
@@ -17,6 +18,7 @@ import axiosClient from "../utils/axiosClient";
 import { signIn } from "next-auth/react";
 import { UserResponse } from "../types/userTypes";
 import PasswordFields from "./logincomps/PasswordFields";
+import { AxiosError } from "axios";
 
 const emailValidator: RegExp =
   /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -39,6 +41,14 @@ export interface Input {
   showError: boolean;
 }
 
+interface UpdateType {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email?: string;
+  password?: string;
+}
+
 const CreateUserForm = ({
   handleCloseModal,
   isEditForm,
@@ -53,6 +63,7 @@ const CreateUserForm = ({
   provider?: string;
 }) => {
   const [changePassword, setChangePassword] = useState(false);
+  const [showUpdateAlert, setShowUpdateAlert] = useState(false);
   const [input, setInput] = useState<Input>(
     !isEditForm
       ? {
@@ -93,16 +104,16 @@ const CreateUserForm = ({
       password: string;
     }): Promise<object> => axiosClient.post("/users/createuser", userData)
   );
-  const { mutate: updateUser, isSuccess: updateSuccess } = useMutation(
-    (updateData: {
-      firstName?: string;
-      lastName?: string;
-      phoneNumber?: string;
-      email?: string;
-      password?: string;
-    }): Promise<object> =>
-      axiosClient.put(`/users/updateuser/${userId}`, updateData)
-  );
+  const {
+    mutate: updateUser,
+    isSuccess: updateSuccess,
+    isError: updateError,
+    error: updateErrorObj,
+  } = useMutation<
+    { message: string; response: string },
+    AxiosError,
+    UpdateType
+  >((updateData) => axiosClient.put(`/users/updateuser/${userId}`, updateData));
   const { data: isUserValid, refetch } = useQuery(
     ["userExists"],
     async () =>
@@ -124,6 +135,22 @@ const CreateUserForm = ({
       })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccess]);
+  useEffect(() => {
+    if (updateError || updateSuccess) {
+      setShowUpdateAlert(true);
+      setTimeout(() => setShowUpdateAlert(false), 3000);
+    }
+    if (updateSuccess && userData) {
+      if (userData.firstName && input.firstName)
+        userData.firstName = input.firstName;
+      if (userData.lastName && input.lastName)
+        userData.lastName = input.lastName;
+      if (userData.phoneNumber && input.phoneNumber)
+        userData.phoneNumber = input.phoneNumber;
+      if (userData.email && input.email) userData.email = input.email;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateError, updateSuccess]);
   const getIsUserValid = useDebounce(() => refetch(), 500);
   const handleCreateUser = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -190,14 +217,15 @@ const CreateUserForm = ({
   const handleChange =
     (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (field === "email" && e.target.value)
+      if (field === "email" && e.target.value) {
         setInput({
           ...input,
           email: e.target.value,
           emailValid: emailValidator.test(e.target.value),
           showError: false,
         });
-      else if (field === "firstName" && e.target.value)
+        getIsUserValid();
+      } else if (field === "firstName" && e.target.value)
         setInput({
           ...input,
           firstName: e.target.value,
@@ -232,7 +260,6 @@ const CreateUserForm = ({
         });
       else
         setInput({ ...input, [field as keyof typeof input]: e.target.value });
-      getIsUserValid();
     };
   return (
     <Box
@@ -241,102 +268,121 @@ const CreateUserForm = ({
         !isEditForm ? handleCreateUser(e) : handleEditUser(e)
       }
     >
-      <Stack gap={1} style={{ minWidth: "400px" }}>
-        <TextField
-          required={!isEditForm}
-          label="First Name"
-          value={input.firstName}
-          style={{ minHeight: "80px" }}
-          onChange={handleChange("firstName")}
-        />
-        <TextField
-          required={!isEditForm}
-          label="Last Name"
-          value={input.lastName}
-          style={{ minHeight: "80px" }}
-          onChange={handleChange("lastName")}
-        />
-        <TextField
-          required={!isEditForm}
-          label="Phone number"
-          value={input.phoneNumber}
-          error={!input.phoneNumberValid && input.phoneNumber !== ""}
-          helperText={
-            !input.phoneNumberValid && input.phoneNumber !== ""
-              ? "Please enter a valid phone number"
-              : ""
-          }
-          style={{ minHeight: "80px" }}
-          onChange={handleChange("phoneNumber")}
-        />
-        <TextField
-          error={!input.emailValid}
-          required={!isEditForm}
-          label="Email"
-          style={{ minHeight: "80px" }}
-          value={input.email}
-          onChange={handleChange("email")}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                {input.email && typeof isUserValid?.response !== "string" ? (
-                  (!isUserValid?.response.emailExists && input.emailValid) ||
-                  input.email === userData?.email ? (
-                    <DoneIcon color="success" />
-                  ) : (
-                    <Tooltip title="Email already in use">
-                      <CloseIcon color="error" />
-                    </Tooltip>
-                  )
-                ) : (
-                  <></>
-                )}
-              </InputAdornment>
-            ),
-          }}
-        ></TextField>
-        {isEditForm && !provider ? (
-          <Stack gap={2}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setChangePassword((state) => !state);
-                setInput((state) => ({
-                  ...state,
-                  password: "",
-                  confirmPassword: "",
-                  showPassword: false,
-                  passwordsMatch: true,
-                  passwordValid: true,
-                }));
-              }}
-            >
-              Change password
-            </Button>
-            <Collapse in={changePassword}>
-              <PasswordFields
-                input={input}
-                setInput={setInput}
-                handleChange={handleChange}
-                isEditForm
-              />
-            </Collapse>
-          </Stack>
-        ) : isEditForm && provider ? (
-          <></>
-        ) : (
-          <PasswordFields
-            input={input}
-            setInput={setInput}
-            handleChange={handleChange}
+      <Stack gap={3}>
+        <Stack gap={1} style={{ minWidth: "400px" }}>
+          <TextField
+            required={!isEditForm}
+            label="First Name"
+            value={input.firstName}
+            style={{ minHeight: "80px" }}
+            onChange={handleChange("firstName")}
           />
-        )}
-        <Collapse in={input.showError}>
-          <Alert severity="error">Please provide valid information</Alert>
+          <TextField
+            required={!isEditForm}
+            label="Last Name"
+            value={input.lastName}
+            style={{ minHeight: "80px" }}
+            onChange={handleChange("lastName")}
+          />
+          <TextField
+            required={!isEditForm}
+            label="Phone number"
+            value={input.phoneNumber}
+            error={!input.phoneNumberValid && input.phoneNumber !== ""}
+            helperText={
+              !input.phoneNumberValid && input.phoneNumber !== ""
+                ? "Please enter a valid phone number"
+                : ""
+            }
+            style={{ minHeight: "80px" }}
+            onChange={handleChange("phoneNumber")}
+          />
+          <TextField
+            error={!input.emailValid}
+            required={!isEditForm}
+            label="Email"
+            style={{ minHeight: "80px" }}
+            value={input.email}
+            onChange={handleChange("email")}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {input.email && typeof isUserValid?.response !== "string" ? (
+                    (!isUserValid?.response.emailExists && input.emailValid) ||
+                    input.email === userData?.email ? (
+                      <DoneIcon color="success" />
+                    ) : (
+                      <Tooltip title="Email already in use">
+                        <CloseIcon color="error" />
+                      </Tooltip>
+                    )
+                  ) : (
+                    <></>
+                  )}
+                </InputAdornment>
+              ),
+            }}
+          ></TextField>
+          {isEditForm && !provider ? (
+            <Stack gap={2}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setChangePassword((state) => !state);
+                  setInput((state) => ({
+                    ...state,
+                    password: "",
+                    confirmPassword: "",
+                    showPassword: false,
+                    passwordsMatch: true,
+                    passwordValid: true,
+                  }));
+                }}
+              >
+                Change password
+              </Button>
+              <Collapse in={changePassword}>
+                <PasswordFields
+                  input={input}
+                  setInput={setInput}
+                  handleChange={handleChange}
+                  isEditForm
+                />
+              </Collapse>
+            </Stack>
+          ) : isEditForm && provider ? (
+            <></>
+          ) : (
+            <PasswordFields
+              input={input}
+              setInput={setInput}
+              handleChange={handleChange}
+            />
+          )}
+          <Collapse in={input.showError}>
+            <Alert severity="error">Please provide valid information</Alert>
+          </Collapse>
+          <Button type="submit" variant="contained">
+            {!isEditForm ? "Create User" : "Edit Profile"}
+          </Button>
+        </Stack>
+        <Collapse in={showUpdateAlert}>
+          <Alert severity={updateSuccess ? "success" : "error"}>
+            {updateSuccess ? (
+              "Update successful!"
+            ) : updateError ? (
+              <Stack>
+                <Typography>Ohh no an error has occuerd</Typography>
+                <Typography>
+                  Error status: {updateErrorObj.status}, Error message:{" "}
+                  {updateErrorObj.message}
+                </Typography>
+              </Stack>
+            ) : (
+              <></>
+            )}
+          </Alert>
         </Collapse>
-        <Button type="submit" variant="contained">
-          {!isEditForm ? "Create User" : "Edit Profile"}
-        </Button>
       </Stack>
     </Box>
   );

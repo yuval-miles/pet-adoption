@@ -37,5 +37,36 @@ model User {
   firstName     String?
   lastName      String?
   phoneNumber   String?
+  role          Role    @default(user)
   accounts      Account[]
+  pets          Pet[]
+}
+
+enum Role {
+  user
+  admin
+}
+
+model Pet {
+  id               String           @id @default(cuid())
+  name             String           @db.VarChar(50)
+  adoptionStatus   AdoptionStatus   @default(available)
+  type             String           @db.VarChar(15)
+  picture          String           @db.VarChar(255)
+  height           Float
+  weight           Float
+  color            String           
+  bio              String           @db.MediumText
+  hypoallergenic   Boolean
+  dietaryRes       String           @db.TinyText
+  breed            String           @db.VarChar(50)
+  userId           String?
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+enum AdoptionStatus {
+  available
+  fosterd
+  adopted
 }

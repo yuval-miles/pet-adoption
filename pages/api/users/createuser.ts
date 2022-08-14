@@ -33,9 +33,7 @@ export default errorHandler(
           !emailValidator.test(email) ||
           !phoneNumberValidator.test(phoneNumber)
         )
-          res
-            .status(400)
-            .json({ message: "failed", response: "Validation failed" });
+          throw new Error("Validation Failed");
         const hashPass = bcrypt.hashSync(password, 10);
         req.body.password = hashPass;
         const newUser = await prisma.user.create({ data: body });

@@ -14,6 +14,8 @@ export default function errorHandler(handler: Handler) {
         case error instanceof Error:
           if (error.message === "Unauthorized")
             return res.status(403).send(error.message);
+          else if (error.message === "Validation Failed")
+            return res.status(400).send(error.message);
           return res.status(500).send(error.message);
         case error instanceof ZodError:
           res.status(400).json({ message: "failed", response: error.errors });
