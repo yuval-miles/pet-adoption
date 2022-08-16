@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Collapse,
   IconButton,
@@ -16,14 +17,17 @@ import { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import Navigation from "../Layout/Navigation";
 import Chip from "@mui/material/Chip";
 import ImageIcon from "@mui/icons-material/Image";
 import AddIcon from "@mui/icons-material/Add";
-import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
-import axiosClient from "../utils/axiosClient";
+import { z, ZodError } from "zod";
+import LinearProgress from "@mui/material/LinearProgress";
+import { v4 as uuidv4 } from "uuid";
+import { useS3Upload } from "../hooks/useS3Upload";
+import { useSearchUser } from "../hooks/useSearchUser";
+import { useDebounce } from "../hooks/useDebounce";
 
 interface ChipData {
   key: number;
@@ -35,6 +39,7 @@ const ListItem = styled("li")(({ theme }) => ({
 }));
 
 const inputSchema = z.object({
+  id: z.string().min(1).optional(),
   name: z.string().min(1).max(50),
   type: z.string().min(1).max(15),
   color: z.string().min(1).max(50),
@@ -43,9 +48,13 @@ const inputSchema = z.object({
   hypoallergenic: z.string().min(1),
   dietInput: z.string(),
   bio: z.string().min(1),
-  height: z.number().positive(),
-  weight: z.number().positive(),
+  height: z.string(),
+  weight: z.string(),
+  picture: z.string().min(1).optional(),
+  userId: z.string().min(1).optional(),
 });
+
+type PetDataType = z.infer<typeof inputSchema>;
 
 const AddpetPage: NextPage = () => {
   const router = useRouter();
@@ -59,51 +68,83 @@ const AddpetPage: NextPage = () => {
     name: "",
     type: "",
     color: "",
-    height: 0,
-    weight: 0,
+    height: "",
+    weight: "",
     breed: "",
     adoptionStatus: "",
     hypoallergenic: "",
     dietInput: "",
     bio: "",
   });
-  const [petId, setPetId] = useState<string>("test");
+  const [userSearch, setUserSearch] = useState("");
+  const [petId, setPetId] = useState<string>("");
   const [chipData, setChipData] = useState<ChipData[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const {
-    data: uploadUrl,
-    refetch: getUploadUrl,
-    isSuccess,
-    isError,
-  } = useQuery(
-    ["getUploadUrl"],
-    async () => (await axiosClient.get(`/admin/s3url/${petId}`)).data,
+  const [selectedUser, setSelectedUser] = useState("");
+  const { s3Upload, setAlertStatus, progress, alertStatus } = useS3Upload<
     {
-      enabled: false,
-      refetchOnWindowFocus: false,
-    }
+      inputs: PetDataType;
+      chipData: Array<{ key: number; label: string }>;
+      selectedUser: string;
+    },
+    PetDataType
+  >(
+    "pet-photo/",
+    petId,
+    selectedImage,
+    "/admin/uploadpet",
+    { inputs, chipData, selectedUser },
+    (data, uploadUrl) => {
+      const chipArr = data.chipData.map((el) => el.label);
+      const petData: PetDataType = {
+        ...data.inputs,
+        picture: uploadUrl?.response.split("?")[0],
+        id: petId,
+        dietInput: chipArr.join(","),
+      };
+      if (selectedUser) petData.userId = selectedUser;
+      return petData;
+    },
+    () => setPetId("")
   );
+  const { users, searchUsers } = useSearchUser("firstName", userSearch);
+  const handleSearch = useDebounce(() => searchUsers(), 500);
   const handleChange =
     (field: string) =>
     (
       e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent
     ) => {
       setInputs((state) => ({ ...state, [field]: e.target.value }));
+      setAlertStatus({ show: false, type: "success", message: "" });
     };
   const handleDeleteChip = (chipToDelete: ChipData) => () => {
     setChipData((chips) =>
       chips.filter((chip) => chip.key !== chipToDelete.key)
     );
   };
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
-      //   inputSchema.parse(inputs);
-      getUploadUrl();
-    } catch {}
+      inputSchema.parse(inputs);
+      if (inputs.adoptionStatus !== "Available" && !selectedUser)
+        throw new Error("Please select a user that the pet is assigned to to");
+      if (!selectedImage) throw new Error("Please provide and image");
+      setPetId(uuidv4());
+    } catch (err) {
+      if (err instanceof Error)
+        setAlertStatus({ show: true, type: "error", message: err.message });
+      else if (err instanceof ZodError) {
+        console.error(err);
+        setAlertStatus({ show: true, type: "error", message: err.name });
+      }
+    }
   };
   useEffect(() => {
-    if (isSuccess) console.log(uploadUrl);
-  }, [isSuccess, uploadUrl]);
+    if (petId) s3Upload();
+  }, [petId, s3Upload]);
+  useEffect(() => {
+    if (inputs.adoptionStatus === "Available") setSelectedUser("");
+  }, [inputs.adoptionStatus]);
   return (
     <Box
       sx={{
@@ -113,7 +154,12 @@ const AddpetPage: NextPage = () => {
         minHeight: "calc(100vh - 120px)",
       }}
     >
-      <Stack gap={3} alignItems={"center"}>
+      <Stack
+        gap={3}
+        alignItems={"center"}
+        component="form"
+        onSubmit={handleSubmit}
+      >
         <Box sx={{ width: "500px" }}>
           <Stack gap={1}>
             {selectedImage ? (
@@ -160,6 +206,9 @@ const AddpetPage: NextPage = () => {
                 Remove Image
               </Button>
             </Collapse>
+            <Collapse in={progress.show} sx={{ width: "100%" }}>
+              <LinearProgress variant="determinate" value={progress.value} />
+            </Collapse>
           </Stack>
         </Box>
         <Stack direction={"row"} gap={3}>
@@ -186,6 +235,7 @@ const AddpetPage: NextPage = () => {
               label="Height"
               onChange={handleChange("height")}
               value={inputs.height}
+              type="number"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">kg</InputAdornment>
@@ -196,6 +246,7 @@ const AddpetPage: NextPage = () => {
             <TextField
               label="Weight"
               onChange={handleChange("weight")}
+              type="number"
               value={inputs.weight}
               InputProps={{
                 startAdornment: (
@@ -276,6 +327,57 @@ const AddpetPage: NextPage = () => {
               <MenuItem value={"Adopted"}>Adopted</MenuItem>
               <MenuItem value={"Fostered"}>Fostered</MenuItem>
             </Select>
+            <Collapse
+              in={
+                inputs.adoptionStatus === "Adopted" ||
+                inputs.adoptionStatus === "Fostered"
+              }
+            >
+              <TextField
+                label="Belonging to user?"
+                value={userSearch}
+                onChange={(e) => {
+                  setUserSearch(e.target.value);
+                  handleSearch();
+                }}
+                fullWidth
+              />
+              <Collapse
+                in={
+                  users?.response.length !== 0 && users?.response !== undefined
+                }
+              >
+                <Paper
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    listStyle: "none",
+                    p: 0.5,
+                    m: 0,
+                    marginTop: "15px",
+                    maxHeight: "100px",
+                    overflow: "auto",
+                  }}
+                  component="ul"
+                >
+                  {users?.response.map((el) => (
+                    <ListItem
+                      key={el.email}
+                      onClick={() => setSelectedUser(el.id!)}
+                    >
+                      <Chip
+                        label={el.firstName}
+                        sx={{
+                          backgroundColor:
+                            selectedUser === el.id ? "lightblue" : "grey",
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </Paper>
+              </Collapse>
+            </Collapse>
             <InputLabel required>Hypoallergenic</InputLabel>
             <Select
               required
@@ -287,17 +389,24 @@ const AddpetPage: NextPage = () => {
               <MenuItem value={"No"}>No</MenuItem>
             </Select>
           </Stack>
-          <TextField
-            multiline
-            minRows={8}
-            label={"Bio"}
-            sx={{ width: "300px" }}
-            required
-            value={inputs.bio}
-            onChange={handleChange("bio")}
-          />
+          <Stack gap={3}>
+            <TextField
+              multiline
+              minRows={8}
+              label={"Bio"}
+              sx={{ width: "300px" }}
+              required
+              value={inputs.bio}
+              onChange={handleChange("bio")}
+            />
+            <Button type="submit" variant="contained">
+              Add Pet
+            </Button>
+            <Collapse in={alertStatus.show}>
+              <Alert severity={alertStatus.type}>{alertStatus.message}</Alert>
+            </Collapse>
+          </Stack>
         </Stack>
-        <Button onClick={handleSubmit}>Test</Button>
       </Stack>
     </Box>
   );

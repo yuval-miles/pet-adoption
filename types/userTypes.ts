@@ -6,4 +6,5 @@ export interface UserResponse {
   email: string;
   image: string | null;
   accounts?: any;
+  id?: string;
 }
