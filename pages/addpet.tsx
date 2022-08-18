@@ -238,7 +238,7 @@ const AddpetPage: NextPage = () => {
               type="number"
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">kg</InputAdornment>
+                  <InputAdornment position="start">cm</InputAdornment>
                 ),
               }}
               required
@@ -250,7 +250,7 @@ const AddpetPage: NextPage = () => {
               value={inputs.weight}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">cm</InputAdornment>
+                  <InputAdornment position="start">kg</InputAdornment>
                 ),
               }}
               required

@@ -1,13 +1,13 @@
 import React from "react";
 import { GetServerSidePropsContext } from "next";
 import { prisma } from "../../utils/primsa";
-import { UserResponse } from "../../types/userTypes";
+import { UserResponse } from "../../types/types";
 import { InferGetServerSidePropsType } from "next";
 import Navigation from "../../Layout/Navigation";
 import CreateUserOrEditForm from "../../components/CreateUserOrEditForm";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { Box } from "@mui/material";
+import { Alert, Box } from "@mui/material";
 
 const UserProfile = ({
   userData,
@@ -21,7 +21,23 @@ const UserProfile = ({
     },
   });
   const { userId } = useRouter().query;
-  if (!userData || typeof userId !== "string") return <></>;
+  if (!userData || typeof userId !== "string")
+    return (
+      <>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "calc(100vh - 120px)",
+          }}
+        >
+          <Alert severity="error">
+            404: We cannot find a user with that id
+          </Alert>
+        </Box>
+      </>
+    );
   return (
     <Box
       sx={{

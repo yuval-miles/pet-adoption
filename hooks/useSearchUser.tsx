@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { UserResponse } from "../types/userTypes";
+import { UserResponse } from "../types/types";
 import axiosClient from "../utils/axiosClient";
 
 type QueryType = "firstName" | "lastName" | "name" | "email" | "id";

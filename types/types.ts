@@ -8,3 +8,14 @@ export interface UserResponse {
   accounts?: any;
   id?: string;
 }
+
+export interface PetSearchResponse {
+  adoptionStatus: string;
+  picture: string;
+  breed: string;
+  height: number;
+  weight: number;
+  type: string;
+  name: string;
+  petId: string;
+}

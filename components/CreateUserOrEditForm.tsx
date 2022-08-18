@@ -16,7 +16,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 import axiosClient from "../utils/axiosClient";
 import { signIn } from "next-auth/react";
-import { UserResponse } from "../types/userTypes";
+import { UserResponse } from "../types/types";
 import PasswordFields from "./logincomps/PasswordFields";
 import { AxiosError } from "axios";
 

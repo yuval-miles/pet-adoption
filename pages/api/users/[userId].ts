@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import errorHandler from "../../../API_middleware/errorHandler";
 import withAuth from "../../../API_middleware/withAuth";
 import { prisma } from "../../../utils/primsa";
-import type { UserResponse } from "../../../types/userTypes";
+import type { UserResponse } from "../../../types/types";
 
 interface Data {
   message: string;

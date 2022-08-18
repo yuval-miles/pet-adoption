@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-}
+  images: {
+    domains: ["pet-adopt-app.s3.eu-central-1.amazonaws.com"],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

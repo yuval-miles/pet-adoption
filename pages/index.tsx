@@ -1,7 +1,7 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import type { NextPage } from "next";
-import type { UserResponse } from "../types/userTypes";
+import type { UserResponse } from "../types/types";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import Navigation from "../Layout/Navigation";
