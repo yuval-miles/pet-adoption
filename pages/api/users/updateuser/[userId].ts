@@ -36,7 +36,6 @@ export default errorHandler(
         query: { userId },
         body,
       } = req;
-      console.log(body);
       bodySchema.parse(body);
       if (
         (!emailValidator.test(body.email) && body.email) ||

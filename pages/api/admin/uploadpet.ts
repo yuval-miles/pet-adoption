@@ -39,9 +39,35 @@ export default errorHandler(
             dietaryRes: body.dietInput,
           };
           delete uploadData.dietInput;
+          delete uploadData.userId;
+          delete uploadData.adoptionStatus;
           const pet = await prisma.pet.create({
             data: uploadData,
           });
+          if (body.adoptionStatus !== "Available") {
+            await prisma.petAdoptionStatus.create({
+              data: {
+                status: body.adoptionStatus,
+                userId: body.userId,
+                petId: body.id,
+              },
+            });
+            await prisma.petLogs.create({
+              data: {
+                status: body.adoptionStatus,
+                userId: body.userId,
+                petId: body.id,
+              },
+            });
+          } else {
+            await prisma.petLogs.create({
+              data: {
+                status: "Available",
+                userId: null,
+                petId: body.id,
+              },
+            });
+          }
           return res.status(200).json({ message: "success", response: pet });
         default:
           res.setHeader("Allow", ["POST"]);

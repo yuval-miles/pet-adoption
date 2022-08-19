@@ -27,19 +27,21 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  password      String?   @db.VarChar(255)
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  firstName     String?
-  lastName      String?
-  phoneNumber   String?
-  role          Role    @default(user)
-  accounts      Account[]
-  pets          Pet[]
+model User { 
+  id                 String    @id @default(cuid())
+  name               String?
+  password           String?   @db.VarChar(255)
+  email              String?   @unique
+  emailVerified      DateTime?
+  image              String?
+  firstName          String?
+  lastName           String?
+  phoneNumber        String?
+  createdAt          DateTime  @default(now())
+  role               Role      @default(user)
+  accounts           Account[]
+  petAdoptionStatus  PetAdoptionStatus[]
+  petLogs            PetLogs[]
 }
 
 enum Role {
@@ -48,26 +50,49 @@ enum Role {
 }
 
 model Pet {
-  id               String           @id @default(cuid())
-  name             String           @db.VarChar(50)
-  adoptionStatus   AdoptionStatus   @default(Available)
-  type             String           @db.VarChar(15)
-  picture          String           @db.VarChar(255)
-  height           Float
-  weight           Float
-  color            String           
-  bio              String           @db.MediumText
-  hypoallergenic   Boolean
-  dietaryRes       String           @db.TinyText
-  breed            String           @db.VarChar(50)
-  userId           String?
-
-  user User? @relation(fields: [userId], references: [id])
+  id                 String           @id @default(cuid())
+  name               String           @db.VarChar(50)
+  type               String           @db.VarChar(15)
+  picture            String           @db.VarChar(255)
+  height             Float
+  weight             Float
+  color              String           
+  bio                String           @db.MediumText
+  hypoallergenic     Boolean
+  dietaryRes         String           @db.TinyText
+  breed              String           @db.VarChar(50)
+  createdAt          DateTime         @default(now())
+  petAdoptionStatus  PetAdoptionStatus[]
+  petLogs            PetLogs[]
 }
 
+model PetAdoptionStatus {
+  id               String           @id @default(cuid())
+  status           AdoptionStatus   
+  petId            String           @unique
+  userId           String
+  createdAt        DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  pet Pet @relation(fields: [petId], references: [id],onDelete: Cascade)
+  @@unique([petId,userId])
+}
+
+model PetLogs {
+  id               String           @id @default(cuid())
+  status           AdoptionStatus   
+  petId            String?
+  userId           String?
+  createdAt        DateTime         @default(now())
+
+  user User? @relation(fields: [userId], references: [id],onDelete: SetNull)
+  pet Pet? @relation(fields: [petId], references: [id],onDelete: SetNull)
+}
 enum AdoptionStatus {
   Available
   Fostered
   Adopted
 }
+
+
 

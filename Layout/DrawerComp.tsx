@@ -94,8 +94,14 @@ const DrawerComp = ({
       router.pathname !== "/profile/[userId]"
     )
       router.push(route.replace("[userId]", data.id as string));
-    else if (route === "/" && data && router.pathname !== "/") router.push("/");
-    else if (route === "/addpet" && router.pathname !== "/addpet")
+    else if (route === "/" && router.pathname !== "/") {
+      router.push("/");
+    } else if (
+      route === "/addpet" &&
+      data &&
+      router.pathname !== "/addpet" &&
+      data.role === "admin"
+    )
       router.push("/addpet");
     else if (route === "/search" && router.pathname !== "/search")
       router.push("/search");

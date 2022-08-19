@@ -60,9 +60,18 @@ export default errorHandler(
           where: {
             AND: queryObj,
           },
+          include: {
+            petAdoptionStatus: {
+              select: {
+                status: true,
+              },
+            },
+          },
         });
         const retArr = pets.map((el) => ({
-          adoptionStatus: el.adoptionStatus,
+          adoptionStatus: el.petAdoptionStatus[0]?.status
+            ? el.petAdoptionStatus[0]?.status
+            : "Available",
           picture: el.picture,
           breed: el.breed,
           height: el.height,
