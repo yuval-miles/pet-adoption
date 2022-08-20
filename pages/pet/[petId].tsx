@@ -38,7 +38,7 @@ const PetPage = ({
       ? petData?.petAdoptionStatus[0]?.status
       : null
   );
-  const [currUserId, setCurrUserId] = useState(
+  const [currOwnerId, setCurrOwnerId] = useState(
     petData?.petAdoptionStatus[0]?.userId
       ? petData.petAdoptionStatus[0].userId
       : null
@@ -53,19 +53,19 @@ const PetPage = ({
         case "Returned":
           if (data) {
             setPetStatus(null);
-            setCurrUserId(null);
+            setCurrOwnerId(null);
           }
           break;
         case "Fostered":
           if (data) {
             setPetStatus("Fostered");
-            setCurrUserId(data.id as string);
+            setCurrOwnerId(data.id as string);
           }
           break;
         case "Adopted":
           if (data) {
             setPetStatus("Adopted");
-            setCurrUserId(data.id as string);
+            setCurrOwnerId(data.id as string);
           }
           break;
       }
@@ -238,7 +238,7 @@ const PetPage = ({
                         Adopt
                       </Button>
                     </Stack>
-                  ) : currUserId === data.id ? (
+                  ) : currOwnerId === data.id ? (
                     petStatus === "Fostered" ? (
                       <Stack direction={"row"} gap={1}>
                         <Button

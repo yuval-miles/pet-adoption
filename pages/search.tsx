@@ -32,6 +32,8 @@ import { AxiosError } from "axios";
 import { useDebounce } from "../hooks/useDebounce";
 import PetCard from "../components/PetCard";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import useGetSavedPets from "../hooks/useGetSavedPets";
 
 interface ChipData {
   key: string;
@@ -40,6 +42,7 @@ interface ChipData {
 
 const SearchPage = () => {
   const router = useRouter();
+  const { data, status } = useSession();
   const [searchValue, setSearchValue] = useState("");
   const [advancedSearch, setAdvancedSearch] = useState(false);
   const [searchType, setSearchType] = useState("Type");
@@ -54,6 +57,9 @@ const SearchPage = () => {
     if (searchValue) setComposedQuery(`type=${searchValue}`);
     else setComposedQuery("");
   }, 500);
+  const { savedPets, getSavedPets, setSavedPets } = useGetSavedPets(
+    data ? (data.id as string) : ""
+  );
   const {
     data: searchResults,
     isLoading,
@@ -101,6 +107,10 @@ const SearchPage = () => {
   useEffect(() => {
     refetch();
   }, [composedQuery, refetch]);
+  useEffect(() => {
+    if (status === "authenticated") getSavedPets();
+    else if (status === "unauthenticated") setSavedPets({});
+  }, [status, getSavedPets, setSavedPets]);
   return (
     <Box
       sx={{
@@ -312,19 +322,25 @@ const SearchPage = () => {
             gap: "10px",
           }}
         >
-          {searchResults?.response?.map((el) => (
-            <PetCard
-              key={el.petId}
-              name={el.name}
-              adoptionStatus={el.adoptionStatus}
-              weight={el.weight}
-              height={el.height}
-              picture={el.picture}
-              breed={el.breed}
-              type={el.type}
-              petId={el.petId}
-            />
-          ))}
+          {searchResults?.response?.map((el) => {
+            return (
+              <PetCard
+                key={el.petId}
+                name={el.name}
+                adoptionStatus={el.adoptionStatus}
+                weight={el.weight}
+                height={el.height}
+                picture={el.picture}
+                breed={el.breed}
+                type={el.type}
+                petId={el.petId}
+                userId={
+                  status === "authenticated" ? (data.id! as string) : undefined
+                }
+                saved={savedPets?.[el.petId] ? true : false}
+              />
+            );
+          })}
         </Stack>
         <Collapse in={isError}>
           <Alert severity="error" sx={{ marginTop: "10px" }}>
