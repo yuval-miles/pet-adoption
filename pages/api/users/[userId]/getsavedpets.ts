@@ -24,7 +24,15 @@ export default errorHandler(
                 userId: userId as string,
               },
               include: {
-                pet: true,
+                pet: {
+                  include: {
+                    petAdoptionStatus: {
+                      select: {
+                        status: true,
+                      },
+                    },
+                  },
+                },
               },
             });
             return res

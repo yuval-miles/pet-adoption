@@ -9,6 +9,7 @@ import {
   Box,
   Button,
   Chip,
+  Collapse,
   Icon,
   Paper,
   Stack,
@@ -22,6 +23,11 @@ import { useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import axiosClient from "../../utils/axiosClient";
 import { AxiosError } from "axios";
+import useGetSavedPets from "../../hooks/useGetSavedPets";
+import { useSavedPets } from "../../store/savedPets";
+import useSavePet from "../../hooks/useSavePet";
+import { useUsersPets } from "../../store/userPets";
+import shallow from "zustand/shallow";
 
 const PetPage = ({
   petData,
@@ -43,29 +49,56 @@ const PetPage = ({
       ? petData.petAdoptionStatus[0].userId
       : null
   );
+  useGetSavedPets();
+  const { alertStatus, savePet } = useSavePet();
+  const { isSaved } = useSavedPets((state) => ({
+    isSaved: petData && state.savedPets.pets?.[petData.id] ? true : false,
+  }));
+  const { addPet, removePet } = useUsersPets(
+    (state) => ({ addPet: state.addPet, removePet: state.removePet }),
+    shallow
+  );
   const { mutate: preformAction } = useMutation<
     { message: string; response: "Returned" | "Fostered" | "Adopted" },
     AxiosError,
     { petId: string; userId: string; action: "Adopt" | "Foster" | "Return" }
   >(async (data) => (await axiosClient.post("/pets/statusaction", data)).data, {
-    onSuccess: (res) => {
+    onSuccess: (res, { petId }) => {
       switch (res.response) {
         case "Returned":
           if (data) {
             setPetStatus(null);
             setCurrOwnerId(null);
+            if (petData?.petAdoptionStatus[0]?.status) {
+              removePet(
+                petData.petAdoptionStatus[0].status === "Adopted"
+                  ? "adoptedPets"
+                  : "fosteredPets",
+                petId
+              );
+            }
           }
           break;
         case "Fostered":
           if (data) {
             setPetStatus("Fostered");
             setCurrOwnerId(data.id as string);
+            if (petData)
+              addPet("fosteredPets", petId, {
+                ...petData,
+                adoptionStatus: "Fostered",
+              });
           }
           break;
         case "Adopted":
           if (data) {
             setPetStatus("Adopted");
             setCurrOwnerId(data.id as string);
+            if (petData)
+              addPet("adoptedPets", petId, {
+                ...petData,
+                adoptionStatus: "Adopted",
+              });
           }
           break;
       }
@@ -204,7 +237,44 @@ const PetPage = ({
             {status === "authenticated" && (
               <Stack direction={"row"} justifyContent={"space-between"}>
                 <Stack justifyContent={"flex-end"}>
-                  <Button variant="outlined">Save Pet</Button>
+                  <Stack gap={1}>
+                    <Collapse in={alertStatus.show}>
+                      <Alert severity={alertStatus.type}>
+                        {alertStatus.type === "success" ? (
+                          (alertStatus.message as string)
+                        ) : (
+                          <Stack>
+                            <Typography>
+                              Ohh no an error has occurred
+                            </Typography>
+                            <Typography>
+                              Error message:{" "}
+                              {alertStatus.message instanceof AxiosError &&
+                                alertStatus.message.message}
+                            </Typography>
+                          </Stack>
+                        )}
+                      </Alert>
+                    </Collapse>
+                    <Button
+                      variant="outlined"
+                      sx={{ width: "150px" }}
+                      onClick={() => {
+                        if (data)
+                          savePet({
+                            petId: petData.id,
+                            userId: data.id as string,
+                            petData: {
+                              ...petData,
+                              petId: petData.id,
+                              adoptionStatus: petStatus as string,
+                            },
+                          });
+                      }}
+                    >
+                      {isSaved ? "Un-save Pet" : "Save Pet"}
+                    </Button>
+                  </Stack>
                 </Stack>
                 <Stack gap={2} alignItems="flex-end">
                   <Paper

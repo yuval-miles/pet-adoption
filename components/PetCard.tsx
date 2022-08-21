@@ -14,8 +14,9 @@ import {
 } from "@mui/material";
 import { AxiosError } from "axios";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import useSavePet from "../hooks/useSavePet";
+import { useSavedPets } from "../store/savedPets";
 import type { PetSearchResponse } from "../types/types";
 
 interface PetCardProps extends PetSearchResponse {
@@ -33,14 +34,12 @@ const PetCard = ({
   name,
   petId,
   userId,
-  saved,
 }: PetCardProps) => {
   const router = useRouter();
   const { setAlertStatus, alertStatus, savePet, isLoading } = useSavePet();
-  const [isSaved, setIsSaved] = useState(false);
-  useEffect(() => {
-    setIsSaved(saved);
-  }, [saved]);
+  const { isSaved } = useSavedPets((state) => ({
+    isSaved: state.savedPets.pets?.[petId] ? true : false,
+  }));
   return (
     <Card sx={{ height: "500px", overflow: "auto" }}>
       <Stack height={"100%"} justifyContent={"space-between"}>
@@ -97,10 +96,22 @@ const PetCard = ({
                     <Button
                       size="small"
                       variant="outlined"
-                      onClick={() => {
-                        setIsSaved((state) => !state);
-                        savePet({ petId, userId });
-                      }}
+                      onClick={() =>
+                        savePet({
+                          petId,
+                          userId,
+                          petData: {
+                            adoptionStatus,
+                            picture,
+                            breed,
+                            height,
+                            weight,
+                            type,
+                            name,
+                            petId,
+                          },
+                        })
+                      }
                     >
                       {isSaved ? "Un-Save pet" : "Save pet"}
                     </Button>

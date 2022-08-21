@@ -57,9 +57,7 @@ const SearchPage = () => {
     if (searchValue) setComposedQuery(`type=${searchValue}`);
     else setComposedQuery("");
   }, 500);
-  const { savedPets, getSavedPets, setSavedPets } = useGetSavedPets(
-    data ? (data.id as string) : ""
-  );
+  const { savedPets } = useGetSavedPets();
   const {
     data: searchResults,
     isLoading,
@@ -107,10 +105,6 @@ const SearchPage = () => {
   useEffect(() => {
     refetch();
   }, [composedQuery, refetch]);
-  useEffect(() => {
-    if (status === "authenticated") getSavedPets();
-    else if (status === "unauthenticated") setSavedPets({});
-  }, [status, getSavedPets, setSavedPets]);
   return (
     <Box
       sx={{
@@ -337,7 +331,7 @@ const SearchPage = () => {
                 userId={
                   status === "authenticated" ? (data.id! as string) : undefined
                 }
-                saved={savedPets?.[el.petId] ? true : false}
+                saved={savedPets.pets?.[el.petId] ? true : false}
               />
             );
           })}

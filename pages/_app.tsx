@@ -6,7 +6,7 @@ import type {
   AppProps,
 } from "next/app";
 import { NextComponentType } from "next";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
