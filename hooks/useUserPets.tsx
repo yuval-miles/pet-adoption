@@ -13,14 +13,17 @@ export type UserPetsResponseType = Array<{
 
 const useUserPets = () => {
   const { data, status } = useSession();
-  const { usersPets, setUsersPets, clearUsersPets } = useUsersPets(
-    (state) => ({
-      usersPets: state.usersPets,
-      setUsersPets: state.setUsersPets,
-      clearUsersPets: state.clearUsersPets,
-    }),
-    shallow
-  );
+  const { usersPets, error, setUsersPets, clearUsersPets, setError } =
+    useUsersPets(
+      (state) => ({
+        usersPets: state.usersPets,
+        error: state.usersPets.error,
+        setUsersPets: state.setUsersPets,
+        clearUsersPets: state.clearUsersPets,
+        setError: state.setError,
+      }),
+      shallow
+    );
   const { isLoading, refetch } = useQuery<
     {
       message: string;
@@ -38,6 +41,7 @@ const useUserPets = () => {
           adoptedPets: {},
           fosteredPets: {},
           hasFetched: true,
+          error: null,
         };
         data.response.forEach((el) => {
           if (el.status === "Adopted")
@@ -53,6 +57,9 @@ const useUserPets = () => {
         });
         setUsersPets(userPetObj);
       },
+      onError: (error) => {
+        setError(error);
+      },
     }
   );
   useEffect(() => {
@@ -62,7 +69,7 @@ const useUserPets = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, refetch, clearUsersPets]);
-  return { usersPets, isLoading };
+  return { usersPets, isLoading, error };
 };
 
 export default useUserPets;

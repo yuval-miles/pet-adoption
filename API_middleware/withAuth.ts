@@ -17,7 +17,7 @@ const withAuth = (
   return async (req: ResponseWithToken, res: NextApiResponse<any>) => {
     const token = await getToken({ req });
     if (token) {
-      if (options?.privateRoute) {
+      if (options?.privateRoute && token.role !== "admin") {
         if (req.method === "GET") {
           if (req.query.userId !== (token.id as string)) {
             throw new Error("Unauthorized");

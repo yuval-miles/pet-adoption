@@ -36,6 +36,7 @@ export default errorHandler(
         for (const [key, value] of queryArr) {
           switch (key) {
             case "adoptionStatus":
+              break;
             case "type":
               queryObj[key] = { equals: value as string };
               break;
@@ -68,7 +69,7 @@ export default errorHandler(
             },
           },
         });
-        const retArr = pets.map((el) => ({
+        let retArr = pets.map((el) => ({
           adoptionStatus: el.petAdoptionStatus[0]?.status
             ? el.petAdoptionStatus[0]?.status
             : "Available",
@@ -80,6 +81,10 @@ export default errorHandler(
           name: el.name,
           petId: el.id,
         }));
+        if (query?.adoptionStatus)
+          retArr = retArr.filter(
+            (el) => el.adoptionStatus === query.adoptionStatus
+          );
         return res.json({ message: "success", response: retArr });
       default:
         res.setHeader("Allow", ["GET"]);

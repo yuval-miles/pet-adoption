@@ -4,7 +4,7 @@ export interface UserResponse {
   lastName: string | null;
   phoneNumber: string | null;
   email: string;
-  image: string | null;
+  image?: string | null;
   accounts?: any;
   id?: string;
 }

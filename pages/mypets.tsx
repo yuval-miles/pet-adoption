@@ -1,4 +1,5 @@
 import {
+  Alert,
   LinearProgress,
   Stack,
   ToggleButton,
@@ -25,7 +26,7 @@ const SearchPage: NextPage = () => {
   });
   const [filter, setFilter] = useState("adoptedPets");
   const { savedPets } = useGetSavedPets();
-  const { usersPets, isLoading } = useUserPets();
+  const { usersPets, isLoading, error } = useUserPets();
   const handleToggle = (
     event: React.MouseEvent<HTMLElement>,
     newFilter: string | null
@@ -49,13 +50,13 @@ const SearchPage: NextPage = () => {
             sx={{ display: "flex", justifyContent: "center" }}
             color={"primary"}
           >
-            <ToggleButton value="adoptedPets" aria-label="left aligned">
+            <ToggleButton value="adoptedPets" aria-label="adopted pets">
               Adopted Pets
             </ToggleButton>
-            <ToggleButton value="fosteredPets" aria-label="left aligned">
+            <ToggleButton value="fosteredPets" aria-label="fostered pets">
               Fostered Pets
             </ToggleButton>
-            <ToggleButton value="savedPets" aria-label="centered">
+            <ToggleButton value="savedPets" aria-label="saved pets">
               Saved pets
             </ToggleButton>
           </ToggleButtonGroup>
@@ -63,6 +64,15 @@ const SearchPage: NextPage = () => {
         </Stack>
         {isLoading ? (
           <LinearProgress />
+        ) : error ? (
+          <>
+            <Alert severity="error">
+              <Stack>
+                <Typography>Ohh no an error has occurred 😰: </Typography>
+                <Typography>Error message: {error.message}</Typography>
+              </Stack>
+            </Alert>
+          </>
         ) : (
           <Stack
             sx={{
