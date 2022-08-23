@@ -6,13 +6,14 @@ import {
   Stack,
   TableCell,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { Row, flexRender } from "@tanstack/react-table";
 import { UserColumn } from "./UsersTable";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axiosClient from "../../utils/axiosClient";
 import { UserPetsResponseType } from "../../hooks/useUserPets";
 import { AxiosError } from "axios";
@@ -20,6 +21,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import PetCard from "../PetCard";
 import { useSession } from "next-auth/react";
 import useGetSavedPets from "../../hooks/useGetSavedPets";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 const CollapseableRow = ({ row }: { row: Row<UserColumn> }) => {
   const { data: userInfo, status } = useSession();
@@ -45,6 +47,25 @@ const CollapseableRow = ({ row }: { row: Row<UserColumn> }) => {
       refetchOnWindowFocus: false,
     }
   );
+  const {
+    isSuccess: adminSuccess,
+    isLoading: adminLoading,
+    isError: adminError,
+    mutate: makeAdmin,
+  } = useMutation<
+    {
+      message: string;
+      response: { message: string; response: string };
+    },
+    AxiosError,
+    string
+  >(
+    async (userId: string) =>
+      (await axiosClient.post(`/admin/giveadminrole`, { userId })).data
+  );
+  const handleMakeAdmin = (userId: string) => () => {
+    if (!adminSuccess) makeAdmin(userId);
+  };
   useEffect(() => {
     if (!hasFetched && open) {
       refetch();
@@ -56,22 +77,50 @@ const CollapseableRow = ({ row }: { row: Row<UserColumn> }) => {
     <React.Fragment key={row.id}>
       <TableRow>
         <TableCell>
-          <IconButton
-            aria-label="expand row"
-            size="small"
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
+          <Tooltip title="Show pets">
+            <IconButton
+              aria-label="expand row"
+              size="small"
+              onClick={() => setOpen(!open)}
+            >
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </Tooltip>
         </TableCell>
         {row.getVisibleCells().map((cell) => (
           <TableCell key={cell.id}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
         ))}
+        <TableCell>
+          <Tooltip
+            title={
+              adminSuccess
+                ? "Success"
+                : adminError
+                ? "Error"
+                : "Give user admin"
+            }
+          >
+            <IconButton
+              aria-label="expand row"
+              size="small"
+              onClick={handleMakeAdmin(
+                row.getVisibleCells()[5].getValue() as string
+              )}
+              disabled={adminLoading}
+            >
+              <AdminPanelSettingsIcon
+                color={
+                  adminSuccess ? "primary" : adminError ? "error" : "action"
+                }
+              />
+            </IconButton>
+          </Tooltip>
+        </TableCell>
       </TableRow>
       <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box
               sx={{

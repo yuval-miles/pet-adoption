@@ -5,6 +5,8 @@ import {
   TableHead,
   TableRow,
   TableBody,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,6 +18,8 @@ import {
 import { AxiosError } from "axios";
 import { PetSearchResponse } from "../../types/types";
 import axiosClient from "../../utils/axiosClient";
+import EditIcon from "@mui/icons-material/Edit";
+import { useRouter } from "next/router";
 
 const PetsTable = () => {
   const columnHelper = createColumnHelper<PetSearchResponse>();
@@ -42,12 +46,12 @@ const PetsTable = () => {
       header: "ID",
     }),
   ];
+  const router = useRouter();
   const {
     data: searchResults,
     isLoading,
     isError,
     error,
-    refetch,
   } = useQuery<{ message: string; response: PetSearchResponse[] }, AxiosError>(
     ["searchResults"],
     async () => {
@@ -83,6 +87,7 @@ const PetsTable = () => {
                           )}
                     </TableCell>
                   ))}
+                  <TableCell></TableCell>
                 </TableRow>
               ))}
             </TableHead>
@@ -97,6 +102,20 @@ const PetsTable = () => {
                       )}
                     </TableCell>
                   ))}
+                  <TableCell>
+                    <Tooltip title="Edit pet">
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          router.push(
+                            `/pet/${row.getAllCells()[6].getValue()}`
+                          );
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

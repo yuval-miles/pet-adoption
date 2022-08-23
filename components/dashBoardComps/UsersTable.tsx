@@ -76,6 +76,7 @@ const UsersTable = () => {
       <TableHead>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
+            <TableCell />
             {headerGroup.headers.map((header) => (
               <TableCell key={header.id}>
                 {header.isPlaceholder
@@ -86,6 +87,7 @@ const UsersTable = () => {
                     )}
               </TableCell>
             ))}
+            <TableCell />
           </TableRow>
         ))}
       </TableHead>
