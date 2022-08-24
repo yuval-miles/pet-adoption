@@ -89,7 +89,7 @@ const PetInfo = ({
       onError: (error) => {
         alertSetter({
           show: true,
-          type: "success",
+          type: "error",
           message: error,
         });
         setTimeout(

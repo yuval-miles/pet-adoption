@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { GetServerSidePropsContext } from "next";
 import { prisma } from "../../utils/primsa";
 import { InferGetServerSidePropsType } from "next";
@@ -8,10 +8,9 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Collapse,
-  Icon,
   IconButton,
+  LinearProgress,
   Paper,
   Stack,
   Tooltip,
@@ -33,6 +32,7 @@ import shallow from "zustand/shallow";
 import PetInfo from "../../components/PetInfo";
 import FlipCameraAndroidIcon from "@mui/icons-material/FlipCameraAndroid";
 import DietChips from "../../components/DietChips";
+import { useS3Upload } from "../../hooks/useS3Upload";
 
 const PetPage = ({
   petData,
@@ -40,6 +40,7 @@ const PetPage = ({
   const { data, status } = useSession();
   const { petId } = useRouter().query;
   const [petDataState, setPetDataState] = useState({ ...petData });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [updateAlertStatus, setUpdateAlertStatus] = useState<{
     show: boolean;
     type: "error" | "success";
@@ -115,6 +116,65 @@ const PetPage = ({
       console.log(error);
     },
   });
+  const { mutate: updateHypo } = useMutation<
+    { message: string; response: string },
+    AxiosError,
+    { [key: string]: boolean }
+  >(
+    async (data) =>
+      (await axiosClient.put(`/admin/${petId}/updatepet`, data)).data,
+    {
+      onSuccess: () => {
+        setPetDataState((state) => ({
+          ...state,
+          hypoallergenic: !state.hypoallergenic,
+        }));
+        setUpdateAlertStatus({
+          show: true,
+          type: "success",
+          message: "Pet Updated",
+        });
+        setTimeout(
+          () =>
+            setUpdateAlertStatus({ show: false, type: "success", message: "" }),
+          3000
+        );
+      },
+      onError: (error) => {
+        setUpdateAlertStatus({
+          show: true,
+          type: "error",
+          message: error,
+        });
+        setTimeout(
+          () =>
+            setUpdateAlertStatus({ show: false, type: "success", message: "" }),
+          3000
+        );
+      },
+    }
+  );
+  const {
+    s3Upload,
+    progress,
+    alertStatus: pictureAlert,
+  } = useS3Upload<{}, { picture: string }>(
+    "pet-photo/",
+    petData?.id!,
+    selectedImage,
+    `/admin/${petData?.id!}/updatepet`,
+    "put",
+    {},
+    (_, uploadUrl) => {
+      const uploadObj: { picture: string } = {
+        picture: uploadUrl?.response.split("?")[0],
+      };
+      return uploadObj;
+    },
+    "Picture updated",
+    (uploadUrl) =>
+      setPetDataState((state) => ({ ...state, picture: uploadUrl }))
+  );
   const handlePetAction =
     (action: "Adopt" | "Foster" | "Return") =>
     (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -125,6 +185,10 @@ const PetPage = ({
           action,
         });
     };
+  useEffect(() => {
+    if (selectedImage !== null) s3Upload();
+  }, [selectedImage, s3Upload]);
+  console.log(selectedImage);
   if (!petData || typeof petId !== "string")
     return (
       <>
@@ -152,14 +216,42 @@ const PetPage = ({
       <Stack gap={2}>
         <Paper sx={{ padding: "10px" }}>
           <Stack direction={"row"} gap={"10px"}>
-            <Image
-              src={petDataState.picture!}
-              alt={petDataState.type!}
-              width="600px"
-              height="455px"
-              layout="fixed"
-              style={{ borderRadius: "5px" }}
-            />
+            <Stack gap={2}>
+              <Image
+                src={
+                  selectedImage
+                    ? URL.createObjectURL(selectedImage)
+                    : petDataState.picture!
+                }
+                alt={petDataState.type!}
+                width="600px"
+                height="455px"
+                layout="fixed"
+                style={{ borderRadius: "5px" }}
+              />
+              {data && data.role === "admin" && (
+                <>
+                  <Button variant="contained" component="label">
+                    Update image
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/png, image/jpeg"
+                      onChange={(e) => {
+                        if (e.target.files?.[0])
+                          setSelectedImage(e.target.files?.[0]);
+                      }}
+                    />
+                  </Button>
+                  <Collapse in={progress.show} sx={{ width: "100%" }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={progress.value}
+                    />
+                  </Collapse>
+                </>
+              )}
+            </Stack>
             <Stack justifyContent={"space-between"} gap={2}>
               <Stack gap={2} sx={{ width: "400px" }}>
                 <Stack
@@ -235,7 +327,13 @@ const PetPage = ({
                       )}
                       {data && data.role === "admin" ? (
                         <Tooltip title="Reverse">
-                          <IconButton>
+                          <IconButton
+                            onClick={() =>
+                              updateHypo({
+                                hypoallergenic: !petDataState.hypoallergenic,
+                              })
+                            }
+                          >
                             <FlipCameraAndroidIcon />
                           </IconButton>
                         </Tooltip>
@@ -247,6 +345,8 @@ const PetPage = ({
                       initChips={
                         petData?.dietaryRes ? petData.dietaryRes.split(",") : []
                       }
+                      petId={petData.id}
+                      alertSetter={setUpdateAlertStatus}
                     />
                     <Paper
                       sx={{
@@ -289,7 +389,7 @@ const PetPage = ({
                   </Stack>
                 </Stack>
               </Stack>
-              {status === "authenticated" && (
+              {status === "authenticated" ? (
                 <Stack direction={"row"} justifyContent={"space-between"}>
                   <Stack justifyContent={"flex-end"}>
                     <Stack gap={1}>
@@ -394,6 +494,27 @@ const PetPage = ({
                     )}
                   </Stack>
                 </Stack>
+              ) : (
+                <>
+                  <Stack alignItems={"flex-end"}>
+                    <Paper
+                      sx={{
+                        padding: "10px",
+                        backgroundColor:
+                          petStatus === "Adopted"
+                            ? "#2979ff"
+                            : petStatus === "Fostered"
+                            ? "#ff9100"
+                            : "#52b202",
+                        color: "white",
+                      }}
+                    >
+                      <Typography>
+                        {petStatus ? petStatus : "Available"}
+                      </Typography>
+                    </Paper>
+                  </Stack>
+                </>
               )}
             </Stack>
           </Stack>
@@ -406,9 +527,24 @@ const PetPage = ({
               <Stack>
                 <Typography>Ohh no an error has occurred</Typography>
                 <Typography>
-                  Error message:{" "}
+                  Error message:
                   {updateAlertStatus.message instanceof AxiosError &&
                     updateAlertStatus.message.message}
+                </Typography>
+              </Stack>
+            )}
+          </Alert>
+        </Collapse>
+        <Collapse in={pictureAlert.show}>
+          <Alert severity={pictureAlert.type}>
+            {pictureAlert.type === "success" ? (
+              (pictureAlert.message as string)
+            ) : (
+              <Stack>
+                <Typography>Ohh no an error has occurred</Typography>
+                <Typography>
+                  Error message:
+                  {pictureAlert.message}
                 </Typography>
               </Stack>
             )}

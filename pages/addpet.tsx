@@ -93,6 +93,7 @@ const AddpetPage: NextPage = () => {
     petId,
     selectedImage,
     "/admin/uploadpet",
+    "post",
     { inputs, chipData, selectedUser },
     (data, uploadUrl) => {
       const chipArr = data.chipData.map((el) => el.label);
@@ -105,6 +106,7 @@ const AddpetPage: NextPage = () => {
       if (selectedUser) petData.userId = selectedUser;
       return petData;
     },
+    "Pet Uploaded!",
     () => setPetId("")
   );
   const { users, searchUsers } = useSearchUser("firstName", userSearch);

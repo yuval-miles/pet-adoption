@@ -4,6 +4,7 @@ const nextConfig = {
   swcMinify: true,
   images: {
     domains: ["pet-adopt-app.s3.eu-central-1.amazonaws.com"],
+    minimumCacheTTL: 60,
   },
 };
 
