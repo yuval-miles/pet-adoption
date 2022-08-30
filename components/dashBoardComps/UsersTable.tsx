@@ -11,7 +11,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchUser } from "../../hooks/useSearchUser";
 import CollapseableRow from "./CollapseableRow";
 

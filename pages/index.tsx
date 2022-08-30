@@ -1,36 +1,11 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import type { NextPage } from "next";
-import type { UserResponse } from "../types/types";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
 import Navigation from "../Layout/Navigation";
-import axiosClient from "../utils/axiosClient";
-import { AxiosError } from "axios";
+import useUserInfo from "../hooks/useUserInfo";
 
 const Home: NextPage = () => {
-  const { data, status } = useSession();
-  const {
-    data: userData,
-    error,
-    isLoading,
-    isSuccess,
-    isError,
-    refetch,
-  } = useQuery<{ message: string; response: UserResponse }, AxiosError>(
-    ["userData"],
-    async () => {
-      if (data) return (await axiosClient.get(`/users/${data.id}`)).data;
-      else throw new Error("Session data is undefined");
-    },
-    {
-      enabled: false,
-      refetchOnWindowFocus: false,
-    }
-  );
-  useEffect(() => {
-    if (status === "authenticated") refetch();
-  }, [status, refetch]);
+  const { isError, isLoading, isSuccess, userData, error, status } =
+    useUserInfo();
   return (
     <>
       <Box
@@ -41,7 +16,7 @@ const Home: NextPage = () => {
           height: "calc(100vh - 120px)",
         }}
       >
-        {status === "authenticated" && isSuccess ? (
+        {status === "authenticated" && isSuccess && userData ? (
           <Typography variant="h5">
             Welcome back{" "}
             {userData.response.firstName && userData.response.lastName

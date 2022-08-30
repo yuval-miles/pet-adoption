@@ -74,6 +74,7 @@ const SearchPage = () => {
       refetchOnWindowFocus: false,
     }
   );
+  console.log(searchResults);
   const handleDeleteChip = (chipToDelete: ChipData) => () => {
     setChipData((chips) =>
       chips.filter((chip) => chip.key !== chipToDelete.key)

@@ -37,6 +37,7 @@ import { useS3Upload } from "../../hooks/useS3Upload";
 const PetPage = ({
   petData,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  console.log(petData?.picture);
   const { data, status } = useSession();
   const { petId } = useRouter().query;
   const [petDataState, setPetDataState] = useState({ ...petData });
@@ -188,7 +189,6 @@ const PetPage = ({
   useEffect(() => {
     if (selectedImage !== null) s3Upload();
   }, [selectedImage, s3Upload]);
-  console.log(selectedImage);
   if (!petData || typeof petId !== "string")
     return (
       <>

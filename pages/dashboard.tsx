@@ -15,6 +15,9 @@ import { useRouter } from "next/router";
 import PetsIcon from "@mui/icons-material/Pets";
 import UsersTable from "../components/dashBoardComps/UsersTable";
 import PetsTable from "../components/dashBoardComps/PetsTable";
+import StatsComp from "../components/dashBoardComps/StatsComp";
+import { useQuery } from "@tanstack/react-query";
+import axiosClient from "../utils/axiosClient";
 
 const Dashboard: NextPage = () => {
   const [page, setPage] = useState<"users" | "pets" | "stats">("users");
@@ -25,6 +28,7 @@ const Dashboard: NextPage = () => {
       router.push("/");
     },
   });
+  const {} = useQuery(["test"], async () => axiosClient.get("/admin/getchats"));
   const handleToggle = (
     event: React.MouseEvent<HTMLElement>,
     newFilter: "users" | "pets" | "stats"
@@ -74,7 +78,9 @@ const Dashboard: NextPage = () => {
               <PetsTable />
             </>
           ) : (
-            <></>
+            <>
+              <StatsComp />
+            </>
           )}
         </Stack>
       </Stack>

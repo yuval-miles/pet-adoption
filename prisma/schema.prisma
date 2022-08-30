@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -21,9 +20,7 @@ model Account {
   scope              String?
   id_token           String?  @db.Text
   session_state      String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
@@ -43,6 +40,8 @@ model User {
   petAdoptionStatus  PetAdoptionStatus[]
   petLogs            PetLogs[]
   likedPets          LikedPets[]
+  messages           Messages[]
+  room               Rooms? 
 }
 
 enum Role {
@@ -74,7 +73,6 @@ model PetAdoptionStatus {
   petId            String           @unique
   userId           String
   createdAt        DateTime         @default(now())
-
   user User @relation(fields: [userId], references: [id],onDelete: Cascade)
   pet Pet @relation(fields: [petId], references: [id],onDelete: Cascade)
   @@unique([petId,userId])
@@ -86,7 +84,6 @@ model PetLogs {
   petId            String?
   userId           String?
   createdAt        DateTime         @default(now())
-
   user User? @relation(fields: [userId], references: [id],onDelete: SetNull)
   pet Pet? @relation(fields: [petId], references: [id],onDelete: SetNull)
 }
@@ -100,10 +97,35 @@ model LikedPets {
   userId      String
   petId       String
   createdAt   DateTime   @default(now())
-
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
   pet Pet @relation(fields: [petId],references: [id],onDelete: Cascade)
   @@unique([userId,petId])
 }
 
+model Messages {
+  id        String   @id @default(cuid())
+  roomId    String?
+  senderId  String?
+  userName  String
+  message   String
+  createdAt DateTime @default(now())
 
+  user User? @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  room Rooms? @relation(fields: [roomId],references: [userId],onDelete: SetNull)
+}
+
+model Rooms {
+  userId    String      @id
+  status    RoomStatus  @default(Open)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  messages  Messages[]
+
+  user User @relation(fields: [userId],references: [id], onDelete: Cascade)
+}
+
+enum RoomStatus {
+  Open
+  Closed
+  Banned
+}

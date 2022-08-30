@@ -106,14 +106,6 @@ const LoginForm = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
         >
           Login With Google
         </Button>
-        <Button
-          onClick={() => signIn("github", { callbackUrl: "/" })}
-          variant="outlined"
-          startIcon={<GitHubIcon />}
-          sx={{ textTransform: "unset" }}
-        >
-          Login with github
-        </Button>
       </Stack>
     </Box>
   );

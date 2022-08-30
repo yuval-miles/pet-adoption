@@ -1,10 +1,12 @@
 import { styled } from "@mui/material/styles";
-import { Box } from "@mui/material";
+import { Box, IconButton, Paper, Typography } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import AppbarComp from "./AppbarComp";
 import DrawerComp from "./DrawerComp";
 import React from "react";
 import LoginModal from "../components/logincomps/LoginModal";
+import MessageComp from "./MessageComp";
+import { useSession } from "next-auth/react";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -15,6 +17,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const Navigation = ({ children }: { children: React.ReactNode }) => {
+  const { data, status } = useSession();
   const [open, setOpen] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);
   const handleOpenModal = () => setOpenModal(true);
@@ -39,6 +42,9 @@ const Navigation = ({ children }: { children: React.ReactNode }) => {
         <DrawerHeader />
         {children}
       </Box>
+      {status === "authenticated" && data.role === "user" && (
+        <MessageComp userId={data.id as string} />
+      )}
     </Box>
   );
 };
