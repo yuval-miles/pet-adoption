@@ -37,18 +37,21 @@ export default errorHandler(
               userId,
             },
           });
-        await pusher.trigger(roomName, "chat-event", {
-          message,
-          userName,
-          createdAt: new Date().toISOString(),
-        });
-        await prisma.messages.create({
+        const messageDB = await prisma.messages.create({
           data: {
             senderId: userId,
             roomId: room.userId,
             userName,
             message,
           },
+        });
+        await pusher.trigger(roomName, "chat-event", {
+          message,
+          userName,
+          createdAt: new Date().toISOString(),
+          id: messageDB.id,
+          roomId: messageDB.roomId,
+          senderId: messageDB.senderId,
         });
         res.status(200).json({ message: "success", response: "message sent" });
         break;

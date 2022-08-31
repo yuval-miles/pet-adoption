@@ -73,6 +73,7 @@ model PetAdoptionStatus {
   petId            String           @unique
   userId           String
   createdAt        DateTime         @default(now())
+  
   user User @relation(fields: [userId], references: [id],onDelete: Cascade)
   pet Pet @relation(fields: [petId], references: [id],onDelete: Cascade)
   @@unique([petId,userId])

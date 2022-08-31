@@ -27,7 +27,7 @@ export default errorHandler(
                   roomId: userId as string,
                 },
                 orderBy: {
-                  createdAt: "asc",
+                  createdAt: "desc",
                 },
               },
             },

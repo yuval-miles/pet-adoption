@@ -19,3 +19,20 @@ export interface PetSearchResponse {
   name: string;
   petId: string;
 }
+
+export interface MessageType {
+  createdAt: string;
+  id: string;
+  message: string;
+  userName: string;
+  roomId: string;
+  senderId: string;
+}
+export interface RoomResponse {
+  createdAt: string;
+  messages: MessageType[];
+  status: "Open" | "Closed" | "Banned";
+  updatedAt: string;
+  userId: string;
+  online?: boolean;
+}
