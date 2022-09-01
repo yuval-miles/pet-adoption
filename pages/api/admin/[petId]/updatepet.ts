@@ -30,7 +30,6 @@ export default errorHandler(
         body,
         query: { petId },
       } = req;
-      console.log(body);
       BodySchema.parse(body);
       switch (method) {
         case "PUT":

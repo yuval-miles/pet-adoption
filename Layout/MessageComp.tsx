@@ -1,5 +1,8 @@
 import {
+  Alert,
   Box,
+  Button,
+  Chip,
   IconButton,
   InputAdornment,
   Paper,
@@ -9,34 +12,35 @@ import {
 } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import MessageIcon from "@mui/icons-material/Message";
-import { useEffect, useState } from "react";
-import Pusher from "pusher-js";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axiosClient from "../utils/axiosClient";
 import { AxiosError } from "axios";
 import useUserInfo from "../hooks/useUserInfo";
 import SendIcon from "@mui/icons-material/Send";
-import type { MessageType, RoomResponse } from "../types/types";
+import { useChatStore } from "../store/chat";
+import { DateTime } from "luxon";
 
 const MessageComp = ({ userId }: { userId: string }) => {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<
-    {
-      message: string;
-      userName: string;
-      createdAt: string;
-      roomId: string;
-      senderId: string;
-      id: string;
-    }[]
-  >([]);
-  const { userData, isSuccess: fetchedUserData, data } = useUserInfo();
+  const { userRoom } = useChatStore((state) => ({
+    userRoom: state.chatState.userRoom,
+  }));
+  const { userData, data } = useUserInfo();
   const { mutate: sendMessage } = useMutation<
     { message: string; response: string },
     AxiosError,
     { message: string; userName: string; userId: string; roomName: string }
   >(async (data) => (await axiosClient.post("/users/chat", data)).data);
+  const { mutate: reopenChat } = useMutation<
+    { message: string; response: string },
+    AxiosError,
+    { userId: string }
+  >(
+    async (data) =>
+      (await axiosClient.post(`/users/${data.userId}/openchat`, data)).data
+  );
   const handleSendMessage = () => {
     if (!userData?.response) return;
     sendMessage({
@@ -49,43 +53,6 @@ const MessageComp = ({ userId }: { userId: string }) => {
     });
     setInput("");
   };
-  const {
-    isError,
-    error,
-    refetch: getUserRoom,
-  } = useQuery<{ message: string; response: RoomResponse }, AxiosError>(
-    ["userRoom"],
-    async () => (await axiosClient.get(`/users/${data!.id}/getroom`)).data,
-    {
-      enabled: false,
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        if (data.response) setMessages(data.response.messages);
-      },
-    }
-  );
-  useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
-      cluster: "eu",
-    });
-    const channel = pusher.subscribe(`userChat-id-${userId}`);
-    channel.bind(
-      "chat-event",
-      ({ message, userName, createdAt, id, senderId, roomId }: MessageType) => {
-        setMessages((state) => [
-          { userName, message, createdAt, id, senderId, roomId },
-          ...state,
-        ]);
-      }
-    );
-    return () => {
-      pusher.unsubscribe(`userChat-id-${userId}`);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    if (fetchedUserData) getUserRoom();
-  }, [fetchedUserData, getUserRoom]);
   return (
     <Paper
       elevation={3}
@@ -127,31 +94,95 @@ const MessageComp = ({ userId }: { userId: string }) => {
               flexDirection: "column-reverse",
             }}
           >
-            {messages.map((el) => (
-              <Box
-                key={el.id}
-                sx={{
-                  backgroundColor:
-                    el.senderId === data.id ? "#e5e5ea" : "#067ffe",
-                  color: el.senderId === data.id ? "black" : "white",
-                  padding: "8px",
-                  borderRadius: "5px",
-                  width: "fit-content",
-                  alignSelf:
-                    el.senderId === data.id ? "flex-end" : "flex-start",
-                }}
-              >
-                <Typography>{el.userName}</Typography>
-                <Typography sx={{ wordBreak: "break-word" }}>
-                  {el.message}
-                </Typography>
-              </Box>
-            ))}
+            {"status" in userRoom && userRoom.status !== "Open" && (
+              <>
+                <Alert
+                  severity={
+                    "status" in userRoom && userRoom.status === "Closed"
+                      ? "success"
+                      : "error"
+                  }
+                >
+                  {"status" in userRoom && userRoom.status === "Closed" ? (
+                    <>
+                      <Stack>
+                        <Typography>An admin has closed this chat</Typography>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() =>
+                            reopenChat({ userId: data!.id as string })
+                          }
+                        >
+                          Re-Open Chat
+                        </Button>
+                      </Stack>
+                    </>
+                  ) : (
+                    "You have been banned from using the chat"
+                  )}
+                </Alert>
+              </>
+            )}
+            {"messages" in userRoom && (
+              <>
+                {userRoom?.messages.map((el, idx, arr) => (
+                  <Stack key={el.id} gap={1}>
+                    {idx === arr.length - 1 ? (
+                      <Chip
+                        sx={{ width: "fit-content", alignSelf: "center" }}
+                        label={`${DateTime.fromISO(el.createdAt).monthLong} ${
+                          DateTime.fromISO(el.createdAt).day
+                        }`}
+                      />
+                    ) : DateTime.fromISO(arr[idx - 1]?.createdAt).day !==
+                        DateTime.fromISO(arr[idx].createdAt).day &&
+                      idx !== 0 ? (
+                      <>
+                        <Chip
+                          sx={{ width: "fit-content", alignSelf: "center" }}
+                          label={`${
+                            DateTime.fromISO(arr[idx - 1]?.createdAt).monthLong
+                          } ${DateTime.fromISO(arr[idx - 1]?.createdAt).day}`}
+                        />
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                    <Box
+                      sx={{
+                        backgroundColor:
+                          el.senderId === data.id ? "#067ffe" : "#e5e5ea",
+                        color: el.senderId === data.id ? "white" : "black",
+                        padding: "8px",
+                        borderRadius: "5px",
+                        width: "fit-content",
+                        alignSelf:
+                          el.senderId === data.id ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      <Stack direction={"row"} gap={1}>
+                        <Stack>
+                          <Typography>{el.userName}</Typography>
+                          <Typography sx={{ wordBreak: "break-word" }}>
+                            {el.message}
+                          </Typography>
+                        </Stack>
+                        <Stack justifyContent={"flex-end"}>
+                          {DateTime.fromISO(el.createdAt).toFormat("HH:mm")}
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                ))}
+              </>
+            )}
           </Stack>
         )}
         <TextField
           placeholder="Message..."
           size="small"
+          disabled={"status" in userRoom && userRoom.status !== "Open"}
           autoComplete="off"
           value={input}
           onChange={(e) => setInput(e.target.value)}

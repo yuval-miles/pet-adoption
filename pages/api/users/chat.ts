@@ -37,6 +37,7 @@ export default errorHandler(
               userId,
             },
           });
+        if (room.status !== "Open") throw new Error("Room is not open");
         const messageDB = await prisma.messages.create({
           data: {
             senderId: userId,

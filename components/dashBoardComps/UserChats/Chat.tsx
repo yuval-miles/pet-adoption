@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Chip,
   Divider,
   IconButton,
   InputAdornment,
@@ -17,6 +18,7 @@ import useUserInfo from "../../../hooks/useUserInfo";
 import { useMutation } from "@tanstack/react-query";
 import axiosClient from "../../../utils/axiosClient";
 import { AxiosError } from "axios";
+import { DateTime } from "luxon";
 
 const Chat = ({
   chatRoom,
@@ -32,6 +34,11 @@ const Chat = ({
     AxiosError,
     { message: string; userName: string; userId: string; roomName: string }
   >(async (data) => (await axiosClient.post("/users/chat", data)).data);
+  const { mutate: changeStatus } = useMutation<
+    { message: string; response: string },
+    AxiosError,
+    { userId: string; roomStatus: string }
+  >(async (data) => (await axiosClient.post("/admin/roomstatus", data)).data);
   const handleSendMessage = () => {
     if (!userData?.response) return;
     sendMessage({
@@ -59,11 +66,32 @@ const Chat = ({
             }`}</Typography>
           </Stack>
           <Stack direction={"row"} gap={2}>
-            <Button onClick={() => setCurrentChat(null)} variant="outlined">
-              Close Chat
-            </Button>
-            <Button onClick={() => setCurrentChat(null)} variant="outlined">
-              Ban User
+            {chatRoom.status !== "Banned" && (
+              <>
+                <Button
+                  onClick={() =>
+                    changeStatus({
+                      userId: chatRoom.userId,
+                      roomStatus:
+                        chatRoom.status === "Open" ? "Closed" : "Open",
+                    })
+                  }
+                  variant="outlined"
+                >
+                  {chatRoom.status === "Open" ? "Close Chat" : "Re-Open Chat"}
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={() =>
+                changeStatus({
+                  userId: chatRoom.userId,
+                  roomStatus: chatRoom.status !== "Banned" ? "Banned" : "Open",
+                })
+              }
+              variant="outlined"
+            >
+              {chatRoom.status !== "Banned" ? "Ban User" : "Un-Ban User"}
             </Button>
             <Button onClick={() => setCurrentChat(null)} variant="contained">
               Back
@@ -82,25 +110,54 @@ const Chat = ({
                   flexDirection: "column-reverse",
                 }}
               >
-                {chatRoom.messages.map((el) => (
-                  <Box
-                    key={el.id}
-                    sx={{
-                      backgroundColor:
-                        el.senderId === data.id ? "#e5e5ea" : "#067ffe",
-                      color: el.senderId === data.id ? "black" : "white",
-                      padding: "8px",
-                      borderRadius: "5px",
-                      width: "fit-content",
-                      alignSelf:
-                        el.senderId === data.id ? "flex-end" : "flex-start",
-                    }}
-                  >
-                    <Typography>{el.userName}</Typography>
-                    <Typography sx={{ wordBreak: "break-word" }}>
-                      {el.message}
-                    </Typography>
-                  </Box>
+                {chatRoom.messages.map((el, idx, arr) => (
+                  <Stack key={el.id} gap={1}>
+                    {idx === arr.length - 1 ? (
+                      <Chip
+                        sx={{ width: "fit-content", alignSelf: "center" }}
+                        label={`${DateTime.fromISO(el.createdAt).monthLong} ${
+                          DateTime.fromISO(el.createdAt).day
+                        }`}
+                      />
+                    ) : DateTime.fromISO(arr[idx - 1]?.createdAt).day !==
+                        DateTime.fromISO(arr[idx].createdAt).day &&
+                      idx !== 0 ? (
+                      <>
+                        <Chip
+                          sx={{ width: "fit-content", alignSelf: "center" }}
+                          label={`${
+                            DateTime.fromISO(arr[idx - 1]?.createdAt).monthLong
+                          } ${DateTime.fromISO(arr[idx - 1]?.createdAt).day}`}
+                        />
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                    <Box
+                      sx={{
+                        backgroundColor:
+                          el.senderId === data.id ? "#067ffe" : "#e5e5ea",
+                        color: el.senderId === data.id ? "white" : "black",
+                        padding: "8px",
+                        borderRadius: "5px",
+                        width: "fit-content",
+                        alignSelf:
+                          el.senderId === data.id ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      <Stack direction={"row"} gap={1}>
+                        <Stack>
+                          <Typography>{el.userName}</Typography>
+                          <Typography sx={{ wordBreak: "break-word" }}>
+                            {el.message}
+                          </Typography>
+                        </Stack>
+                        <Stack justifyContent={"flex-end"}>
+                          {DateTime.fromISO(el.createdAt).toFormat("HH:mm")}
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  </Stack>
                 ))}
               </Stack>
             )}

@@ -33,14 +33,12 @@ const StatsComp = () => {
   >(["stats"], async () => (await axiosClient.get("/admin/getstats")).data, {
     refetchOnWindowFocus: false,
   });
-  console.log(data);
   if (isLoading)
     return (
       <>
         <LinearProgress />
       </>
     );
-  console.log(data?.response);
   if (isError) return <Alert severity="error">{error.message}</Alert>;
   return (
     <>

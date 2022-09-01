@@ -7,6 +7,7 @@ import React from "react";
 import LoginModal from "../components/logincomps/LoginModal";
 import MessageComp from "./MessageComp";
 import { useSession } from "next-auth/react";
+import useChat from "../hooks/useChat";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -17,6 +18,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const Navigation = ({ children }: { children: React.ReactNode }) => {
+  useChat();
   const { data, status } = useSession();
   const [open, setOpen] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);

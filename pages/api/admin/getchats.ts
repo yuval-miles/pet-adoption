@@ -23,9 +23,6 @@ export default errorHandler(
           const body = await pusherRes.json();
           const channelsInfo = body.channels;
           const rooms: RoomReturnType = await prisma.rooms.findMany({
-            where: {
-              status: "Open",
-            },
             include: {
               messages: {
                 orderBy: {
