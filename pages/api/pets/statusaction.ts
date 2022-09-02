@@ -3,6 +3,7 @@ import errorHandler from "../../../API_middleware/errorHandler";
 import withAuth, { ResponseWithToken } from "../../../API_middleware/withAuth";
 import { prisma } from "../../../utils/primsa";
 import { z } from "zod";
+import { pusher } from "../../../utils/pusher";
 
 interface Data {
   message: string;
@@ -13,6 +14,7 @@ const BodySchema = z.object({
   petId: z.string(),
   userId: z.string(),
   action: z.enum(["Return", "Foster", "Adopt"]),
+  userName: z.string(),
 });
 
 export default errorHandler(
@@ -48,6 +50,7 @@ export default errorHandler(
                     petId: body.petId,
                   },
                 });
+                sendNotification("Returned", body.userName, body.petId);
                 return res
                   .status(200)
                   .json({ message: "success", response: "Returned" });
@@ -68,6 +71,7 @@ export default errorHandler(
                     userId: body.userId,
                   },
                 });
+                sendNotification("Adopted", body.userName, body.petId);
                 return res
                   .status(200)
                   .json({ message: "success", response: "Adopted" });
@@ -89,6 +93,7 @@ export default errorHandler(
                     userId: body.userId,
                   },
                 });
+                sendNotification("Adopted", body.userName, body.petId);
                 return res
                   .status(200)
                   .json({ message: "success", response: "Adopted" });
@@ -109,6 +114,7 @@ export default errorHandler(
                     userId: body.userId,
                   },
                 });
+                sendNotification("Fostered", body.userName, body.petId);
                 return res
                   .status(200)
                   .json({ message: "success", response: "Fostered" });
@@ -134,6 +140,7 @@ export default errorHandler(
                     userId: body.userId,
                   },
                 });
+                sendNotification("Fostered", body.userName, body.petId);
                 return res
                   .status(200)
                   .json({ message: "success", response: "Fostered" });
@@ -150,3 +157,17 @@ export default errorHandler(
     { privateRoute: true }
   )
 );
+
+const sendNotification = async (
+  statusAction: string,
+  userName: string,
+  petId: string
+) => {
+  await pusher.trigger("admin-notification", "admin-notification", {
+    type: "petStatusChange",
+    createdAt: new Date().toISOString(),
+    userName,
+    petId,
+    statusAction,
+  });
+};

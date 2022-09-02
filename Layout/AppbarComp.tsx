@@ -1,10 +1,13 @@
-import { Button, IconButton, Toolbar } from "@mui/material";
+import { Button, IconButton, Paper, Toolbar, Tooltip } from "@mui/material";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MenuIcon from "@mui/icons-material/Menu";
 import { styled } from "@mui/material/styles";
-import React from "react";
+import React, { useState } from "react";
 import { Stack } from "@mui/system";
 import { useSession, signOut } from "next-auth/react";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import NotificationDropdown from "./NotificationDropdown";
+import NotificationAddIcon from "@mui/icons-material/NotificationAdd";
 
 const drawerWidth = 240;
 
@@ -40,7 +43,9 @@ const AppbarComp = ({
   handleDrawerOpen: () => void;
   handleOpenModal: () => void;
 }) => {
-  const { status, data } = useSession();
+  const { status } = useSession();
+  const [showNotifications, setShowNotification] = useState(false);
+  const [newNotifications, setNewNotifications] = useState(false);
   return (
     <AppBar position="fixed" open={open}>
       <Stack direction={"row"} justifyContent={"space-between"}>
@@ -55,18 +60,38 @@ const AppbarComp = ({
             <MenuIcon sx={{ color: "black" }} />
           </IconButton>
         </Toolbar>
-        <Button
-          variant="contained"
-          sx={{ margin: "15px" }}
-          onClick={
-            status === "unauthenticated"
-              ? handleOpenModal
-              : () => signOut({ redirect: false })
-          }
-        >
-          {status === "unauthenticated" ? "Sign-Up/Login" : "Sign Out"}
-        </Button>
+        <Stack direction={"row"} gap={2} alignItems={"center"}>
+          <Tooltip title={"Notifications"}>
+            <IconButton
+              onClick={() => {
+                setShowNotification((state) => !state);
+                setNewNotifications(false);
+              }}
+            >
+              {newNotifications ? (
+                <NotificationAddIcon color="primary" />
+              ) : (
+                <NotificationsIcon />
+              )}
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="contained"
+            sx={{ margin: "15px" }}
+            onClick={
+              status === "unauthenticated"
+                ? handleOpenModal
+                : () => signOut({ redirect: false })
+            }
+          >
+            {status === "unauthenticated" ? "Sign-Up/Login" : "Sign Out"}
+          </Button>
+        </Stack>
       </Stack>
+      <NotificationDropdown
+        showNotifications={showNotifications}
+        setNewNotifications={setNewNotifications}
+      />
     </AppBar>
   );
 };

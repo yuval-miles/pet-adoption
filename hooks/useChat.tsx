@@ -5,11 +5,13 @@ import Pusher from "pusher-js";
 import { useEffect, useMemo } from "react";
 import shallow from "zustand/shallow";
 import { useChatStore } from "../store/chat";
+import { useNotifications } from "../store/notifications";
 import { RoomResponse, MessageType } from "../types/types";
 import axiosClient from "../utils/axiosClient";
 
 const useChat = () => {
   const { data: userData, status } = useSession();
+  const addNotification = useNotifications((state) => state.addNotification);
   const {
     setAdminRooms,
     setUserRoom,
@@ -63,6 +65,12 @@ const useChat = () => {
             }
           );
           channel.bind("chat-event", (message: MessageType) => {
+            if (message.senderId !== userData!.id)
+              addNotification({
+                type: "userChat",
+                userName: message.userName,
+                createdAt: message.createdAt,
+              });
             addMessageToRoom(message, idx);
           });
           channel.bind(

@@ -135,15 +135,14 @@ const MessageComp = ({ userId }: { userId: string }) => {
                           DateTime.fromISO(el.createdAt).day
                         }`}
                       />
-                    ) : DateTime.fromISO(arr[idx - 1]?.createdAt).day !==
-                        DateTime.fromISO(arr[idx].createdAt).day &&
-                      idx !== 0 ? (
+                    ) : DateTime.fromISO(arr[idx + 1]?.createdAt).day !==
+                      DateTime.fromISO(arr[idx].createdAt).day ? (
                       <>
                         <Chip
                           sx={{ width: "fit-content", alignSelf: "center" }}
                           label={`${
-                            DateTime.fromISO(arr[idx - 1]?.createdAt).monthLong
-                          } ${DateTime.fromISO(arr[idx - 1]?.createdAt).day}`}
+                            DateTime.fromISO(arr[idx]?.createdAt).monthLong
+                          } ${DateTime.fromISO(arr[idx]?.createdAt).day}`}
                         />
                       </>
                     ) : (

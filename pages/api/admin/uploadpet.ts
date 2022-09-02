@@ -3,6 +3,7 @@ import errorHandler from "../../../API_middleware/errorHandler";
 import withAuth from "../../../API_middleware/withAuth";
 import { z } from "zod";
 import { prisma } from "../../../utils/primsa";
+import { pusher } from "../../../utils/pusher";
 
 interface Data {
   message: string;
@@ -68,6 +69,11 @@ export default errorHandler(
               },
             });
           }
+          await pusher.trigger("user-notification", "user-notification", {
+            type: "addedPet",
+            createdAt: new Date().toISOString(),
+            petName: body.name,
+          });
           return res.status(200).json({ message: "success", response: pet });
         default:
           res.setHeader("Allow", ["POST"]);

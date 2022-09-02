@@ -33,11 +33,13 @@ import PetInfo from "../../components/PetInfo";
 import FlipCameraAndroidIcon from "@mui/icons-material/FlipCameraAndroid";
 import DietChips from "../../components/DietChips";
 import { useS3Upload } from "../../hooks/useS3Upload";
+import useUserInfo from "../../hooks/useUserInfo";
 
 const PetPage = ({
   petData,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const { data, status } = useSession();
+  const { userData } = useUserInfo();
   const { petId } = useRouter().query;
   const [petDataState, setPetDataState] = useState({ ...petData });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -70,7 +72,12 @@ const PetPage = ({
   const { mutate: preformAction } = useMutation<
     { message: string; response: "Returned" | "Fostered" | "Adopted" },
     AxiosError,
-    { petId: string; userId: string; action: "Adopt" | "Foster" | "Return" }
+    {
+      petId: string;
+      userId: string;
+      action: "Adopt" | "Foster" | "Return";
+      userName: string;
+    }
   >(async (data) => (await axiosClient.post("/pets/statusaction", data)).data, {
     onSuccess: (res, { petId }) => {
       switch (res.response) {
@@ -178,11 +185,14 @@ const PetPage = ({
   const handlePetAction =
     (action: "Adopt" | "Foster" | "Return") =>
     (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      if (data && petId)
+      if (data && petId && userData)
         preformAction({
           userId: data.id as string,
           petId: petId as string,
           action,
+          userName: userData?.response.firstName
+            ? userData?.response.firstName + " " + userData?.response.lastName
+            : userData?.response.name,
         });
     };
   useEffect(() => {

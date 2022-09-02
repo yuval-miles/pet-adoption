@@ -17,6 +17,9 @@ export default errorHandler(
           const totalUsers = await prisma.user.findMany({
             select: {
               createdAt: true,
+              name: true,
+              firstName: true,
+              lastName: true,
             },
           });
           const totalPets = await prisma.pet.count();
@@ -26,7 +29,15 @@ export default errorHandler(
               status: true,
             },
           });
-          const petLogs = await prisma.petLogs.findMany();
+          const petLogs = await prisma.petLogs.findMany({
+            include: {
+              pet: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          });
           return res.status(200).json({
             message: "success",
             response: { totalUsers, totalPets, petsStatus, petLogs },
