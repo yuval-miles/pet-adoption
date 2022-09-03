@@ -109,6 +109,8 @@ const DrawerComp = ({
       router.push("/mypets");
     else if (route === "/dashboard" && router.pathname !== "/dashboard")
       router.push("/dashboard");
+    else if (route === "/contactus" && router.pathname !== "/contactus")
+      router.push("/contactus");
   };
   return (
     <Drawer variant="permanent" open={open}>

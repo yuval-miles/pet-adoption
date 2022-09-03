@@ -4,6 +4,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import HomeIcon from "@mui/icons-material/Home";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AddIcon from "@mui/icons-material/Add";
+import EmailIcon from "@mui/icons-material/Email";
 
 export type Routes =
   | "/search"
@@ -11,7 +12,8 @@ export type Routes =
   | "/profile/[userId]"
   | "/"
   | "/dashboard"
-  | "/addpet";
+  | "/addpet"
+  | "/contactus";
 
 export type NavList = Array<{
   text: string;
@@ -41,6 +43,11 @@ export const authNavList: NavList = [
     icon: <SettingsIcon color="inherit" />,
     route: "/profile/[userId]",
   },
+  {
+    text: "Contact us",
+    icon: <EmailIcon color="inherit" />,
+    route: "/contactus",
+  },
 ];
 
 export const adminNavList: NavList = [
@@ -61,5 +68,10 @@ export const adminNavList: NavList = [
     text: "Settings",
     icon: <SettingsIcon color="inherit" />,
     route: "/profile/[userId]",
+  },
+  {
+    text: "Contact us",
+    icon: <EmailIcon color="inherit" />,
+    route: "/contactus",
   },
 ];

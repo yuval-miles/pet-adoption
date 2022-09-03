@@ -20,6 +20,7 @@ export default errorHandler(
               name: true,
               firstName: true,
               lastName: true,
+              id: true,
             },
           });
           const totalPets = await prisma.pet.count();
@@ -34,6 +35,13 @@ export default errorHandler(
               pet: {
                 select: {
                   name: true,
+                },
+              },
+              user: {
+                select: {
+                  name: true,
+                  firstName: true,
+                  lastName: true,
                 },
               },
             },

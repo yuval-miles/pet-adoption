@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
-import Pusher from "pusher-js";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import shallow from "zustand/shallow";
 import { useChatStore } from "../store/chat";
 import { useNotifications } from "../store/notifications";
 import { RoomResponse, MessageType } from "../types/types";
 import axiosClient from "../utils/axiosClient";
+import { pusher } from "../utils/clientPusher";
 
 const useChat = () => {
   const { data: userData, status } = useSession();
@@ -31,13 +31,6 @@ const useChat = () => {
       changeAdminRoomState: state.changeAdminRoomState,
     }),
     shallow
-  );
-  const pusher = useMemo(
-    () =>
-      new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
-        cluster: "eu",
-      }),
-    []
   );
   const { refetch: getAdminRooms } = useQuery<
     {
@@ -126,7 +119,7 @@ const useChat = () => {
         pusher.unsubscribe(el.name);
       });
     };
-  }, [pusher]);
+  }, []);
 };
 
 export default useChat;

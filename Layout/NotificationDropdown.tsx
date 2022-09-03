@@ -4,7 +4,7 @@ import Pusher from "pusher-js";
 import { Dispatch, useEffect, useState } from "react";
 import { useNotifications } from "../store/notifications";
 import { DateTime } from "luxon";
-import { Box } from "@mui/system";
+import { pusher } from "../utils/clientPusher";
 
 const NotificationDropdown = ({
   showNotifications,
@@ -28,9 +28,6 @@ const NotificationDropdown = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showNotifications, notifications.length]);
   useEffect(() => {
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
-      cluster: "eu",
-    });
     if (status === "authenticated" && data.role === "admin") {
       const channel = pusher.subscribe("admin-notification");
       channel.bind(
@@ -48,7 +45,6 @@ const NotificationDropdown = ({
           petId: string;
           statusAction: "Adopted" | "Returned" | "Fostered";
         }) => {
-          console.log("test");
           if (!showNotifications) setNewNotifications(true);
           addNotification({
             type,
@@ -60,7 +56,6 @@ const NotificationDropdown = ({
         }
       );
     } else if (status === "authenticated" && data.role === "user") {
-      console.log("test");
       const channel = pusher.subscribe("user-notification");
       channel.bind(
         "user-notification",
