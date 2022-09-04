@@ -33,7 +33,6 @@ const InquiriesComp = () => {
       refetchOnWindowFocus: false,
     }
   );
-  console.log(data);
   if (isLoading) return <LinearProgress />;
   return (
     <Paper
@@ -50,54 +49,64 @@ const InquiriesComp = () => {
     >
       {isSuccess ? (
         <>
-          {data.response.map((el) => (
-            <Paper key={el.id} sx={{ padding: "20px", width: "75%" }}>
-              <Stack gap={3}>
-                <Stack direction={"row"} justifyContent={"space-between"}>
-                  <Stack gap={2}>
-                    <Stack direction={"row"} gap={2} alignItems={"center"}>
-                      <PersonIcon sx={{ fontSize: "2rem" }} />
-                      <Typography variant="h4">
-                        {el.user
-                          ? el.user.firstName
-                            ? `${el.user.firstName} ${el.user.lastName}`
-                            : el.user.name
-                          : "Deleted user"}
-                      </Typography>
+          {data.response.length ? (
+            <>
+              {data.response.map((el) => (
+                <Paper key={el.id} sx={{ padding: "20px", width: "75%" }}>
+                  <Stack gap={3}>
+                    <Stack direction={"row"} justifyContent={"space-between"}>
+                      <Stack gap={2}>
+                        <Stack direction={"row"} gap={2} alignItems={"center"}>
+                          <PersonIcon sx={{ fontSize: "2rem" }} />
+                          <Typography variant="h4">
+                            {el.user
+                              ? el.user.firstName
+                                ? `${el.user.firstName} ${el.user.lastName}`
+                                : el.user.name
+                              : "Deleted user"}
+                          </Typography>
+                        </Stack>
+                        <Typography>
+                          Email:{" "}
+                          {el.user
+                            ? el.user.email
+                              ? el.user.email
+                              : "Unassigned"
+                            : "Deleted user"}
+                        </Typography>
+                        <Typography>
+                          Phone Number:{" "}
+                          {el.user
+                            ? el.user.phoneNumber
+                              ? el.user.phoneNumber
+                              : "Unassigned"
+                            : "Deleted user"}
+                        </Typography>
+                      </Stack>
+                      <Stack gap={2} alignItems={"flex-end"}>
+                        <Typography variant="h5">
+                          User Id: {el.userId ? el.userId : "Deleted User"}
+                        </Typography>
+                        <Typography>
+                          Created At: {DateTime.fromISO(el.createdAt).toHTTP()}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                    <Typography>
-                      Email:{" "}
-                      {el.user
-                        ? el.user.email
-                          ? el.user.email
-                          : "Unassigned"
-                        : "Deleted user"}
-                    </Typography>
-                    <Typography>
-                      Phone Number:{" "}
-                      {el.user
-                        ? el.user.phoneNumber
-                          ? el.user.phoneNumber
-                          : "Unassigned"
-                        : "Deleted user"}
-                    </Typography>
+                    <Stack gap={2}>
+                      <Typography>Reason: {el.reason}</Typography>
+                      <Typography>Inquiry: {el.letter}</Typography>
+                    </Stack>
                   </Stack>
-                  <Stack gap={2} alignItems={"flex-end"}>
-                    <Typography variant="h5">
-                      User Id: {el.userId ? el.userId : "Deleted User"}
-                    </Typography>
-                    <Typography>
-                      Created At: {DateTime.fromISO(el.createdAt).toHTTP()}
-                    </Typography>
-                  </Stack>
-                </Stack>
-                <Stack gap={2}>
-                  <Typography>Reason: {el.reason}</Typography>
-                  <Typography>Inquiry: {el.letter}</Typography>
-                </Stack>
-              </Stack>
-            </Paper>
-          ))}
+                </Paper>
+              ))}
+            </>
+          ) : (
+            <>
+              <Typography variant="h4">
+                You currently have no inquiries
+              </Typography>
+            </>
+          )}
         </>
       ) : isError ? (
         <>

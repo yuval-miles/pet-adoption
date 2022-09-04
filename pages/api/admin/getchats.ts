@@ -17,10 +17,6 @@ export default errorHandler(
       const { method } = req;
       switch (method) {
         case "GET":
-          console.log(process.env.PUSHER_KEY);
-          console.log(process.env.PUSHER_APP_ID);
-          console.log(process.env.PUSHER_SECRET);
-          console.log(process.env.PUSHER_CLUSTER);
           const pusherRes = await pusher.get({ path: "/channels" });
           if (pusherRes.status !== 200)
             throw new Error("Unable to connect to pusher");

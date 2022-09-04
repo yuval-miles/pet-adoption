@@ -9,6 +9,7 @@ import {
   Box,
   Button,
   Collapse,
+  Fade,
   IconButton,
   LinearProgress,
   Paper,
@@ -34,6 +35,7 @@ import FlipCameraAndroidIcon from "@mui/icons-material/FlipCameraAndroid";
 import DietChips from "../../components/DietChips";
 import { useS3Upload } from "../../hooks/useS3Upload";
 import useUserInfo from "../../hooks/useUserInfo";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const PetPage = ({
   petData,
@@ -69,7 +71,7 @@ const PetPage = ({
     (state) => ({ addPet: state.addPet, removePet: state.removePet }),
     shallow
   );
-  const { mutate: preformAction } = useMutation<
+  const { mutate: preformAction, isLoading } = useMutation<
     { message: string; response: "Returned" | "Fostered" | "Adopted" },
     AxiosError,
     {
@@ -80,6 +82,7 @@ const PetPage = ({
     }
   >(async (data) => (await axiosClient.post("/pets/statusaction", data)).data, {
     onSuccess: (res, { petId }) => {
+      setUpdateAlertStatus((state) => ({ ...state, show: false }));
       switch (res.response) {
         case "Returned":
           if (data) {
@@ -120,7 +123,11 @@ const PetPage = ({
       }
     },
     onError: (error) => {
-      console.log(error);
+      setUpdateAlertStatus({
+        show: true,
+        message: error.message,
+        type: "error",
+      });
     },
   });
   const { mutate: updateHypo } = useMutation<
@@ -441,6 +448,9 @@ const PetPage = ({
                     </Stack>
                   </Stack>
                   <Stack gap={2} alignItems="flex-end">
+                    <Fade in={isLoading}>
+                      <CircularProgress />
+                    </Fade>
                     <Paper
                       sx={{
                         padding: "10px",
