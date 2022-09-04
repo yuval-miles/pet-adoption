@@ -13,6 +13,7 @@ export default withAuth({
           if (token.role === "admin") return true;
           else return false;
         case req.nextUrl.pathname === "/mypets":
+        case req.nextUrl.pathname === "/contactus":
           return true;
         default:
           return false;
@@ -21,4 +22,6 @@ export default withAuth({
   },
 });
 
-export const config = { matcher: ["/profile/:userId", "/addpet", "/mypets"] };
+export const config = {
+  matcher: ["/profile/:userId", "/addpet", "/mypets", "/contactus"],
+};

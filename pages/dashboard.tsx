@@ -18,11 +18,13 @@ import PetsTable from "../components/dashBoardComps/PetsTable";
 import StatsComp from "../components/dashBoardComps/StatsComp";
 import ChatIcon from "@mui/icons-material/Chat";
 import ChatsComp from "../components/dashBoardComps/UserChats/ChatsComp";
+import MailIcon from "@mui/icons-material/Mail";
+import InquiriesComp from "../components/dashBoardComps/InquiriesComp";
 
 const Dashboard: NextPage = () => {
-  const [page, setPage] = useState<"users" | "pets" | "stats" | "chats">(
-    "users"
-  );
+  const [page, setPage] = useState<
+    "users" | "pets" | "stats" | "chats" | "inquiries"
+  >("users");
   const router = useRouter();
   useSession({
     required: true,
@@ -32,7 +34,7 @@ const Dashboard: NextPage = () => {
   });
   const handleToggle = (
     event: React.MouseEvent<HTMLElement>,
-    newFilter: "users" | "pets" | "stats"
+    newFilter: "users" | "pets" | "stats" | "chats" | "inquiries"
   ) => {
     if (newFilter !== null) {
       setPage(newFilter);
@@ -68,6 +70,12 @@ const Dashboard: NextPage = () => {
                 <TimelineIcon />
               </Stack>
             </ToggleButton>
+            <ToggleButton value="inquiries" aria-label="inquiries">
+              <Stack direction={"row"} gap={2}>
+                <Typography>Inquiries</Typography>
+                <MailIcon />
+              </Stack>
+            </ToggleButton>
             <ToggleButton value="chats" aria-label="chats">
               <Stack direction={"row"} gap={2}>
                 <Typography>Chats</Typography>
@@ -88,9 +96,13 @@ const Dashboard: NextPage = () => {
             <>
               <StatsComp />
             </>
-          ) : (
+          ) : page === "chats" ? (
             <>
               <ChatsComp />
+            </>
+          ) : (
+            <>
+              <InquiriesComp />
             </>
           )}
         </Stack>

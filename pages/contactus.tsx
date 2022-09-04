@@ -13,12 +13,19 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { ChangeEvent, useState } from "react";
 import Navigation from "../Layout/Navigation";
 import axiosClient from "../utils/axiosClient";
 
 const ContactUs = () => {
-  const { data, status } = useSession();
+  const router = useRouter();
+  const { data, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/");
+    },
+  });
   const [inputs, setInputs] = useState({ reason: "", letter: "" });
   const [alert, setAlert] = useState<{
     status: "success" | "error";
@@ -65,7 +72,6 @@ const ContactUs = () => {
       setAlert((state) => ({ ...state, show: false }));
     };
   const handleSumbit = () => {
-    if (status === "unauthenticated") return;
     sendInquiry({
       userId: data!.id as string,
       reason: inputs.reason,
