@@ -5,7 +5,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { NextPage } from "next";
 import React, { useState } from "react";
 import Navigation from "../Layout/Navigation";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -20,8 +19,9 @@ import ChatIcon from "@mui/icons-material/Chat";
 import ChatsComp from "../components/dashBoardComps/UserChats/ChatsComp";
 import MailIcon from "@mui/icons-material/Mail";
 import InquiriesComp from "../components/dashBoardComps/InquiriesComp";
+import type { Page } from "../types/types";
 
-const Dashboard: NextPage = () => {
+const Dashboard: Page = () => {
   const [page, setPage] = useState<
     "users" | "pets" | "stats" | "chats" | "inquiries"
   >("users");

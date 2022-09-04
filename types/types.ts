@@ -1,3 +1,9 @@
+import { NextPage } from "next/types";
+import { ReactNode } from "react";
+
+export type Page<P = {}> = NextPage<P> & {
+  getLayout?: (page: ReactNode) => ReactNode;
+};
 export interface UserResponse {
   name: string;
   firstName: string | null;

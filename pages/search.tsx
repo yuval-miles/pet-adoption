@@ -34,13 +34,14 @@ import PetCard from "../components/PetCard";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import useGetSavedPets from "../hooks/useGetSavedPets";
+import type { Page } from "../types/types";
 
 interface ChipData {
   key: string;
   label: string;
 }
 
-const SearchPage = () => {
+const SearchPage: Page = () => {
   const router = useRouter();
   const { data, status } = useSession();
   const [searchValue, setSearchValue] = useState("");

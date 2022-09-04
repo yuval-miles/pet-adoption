@@ -1,9 +1,9 @@
 import { Alert, Box, CircularProgress, Stack, Typography } from "@mui/material";
-import type { NextPage } from "next";
+import type { Page } from "../types/types";
 import Navigation from "../Layout/Navigation";
 import useUserInfo from "../hooks/useUserInfo";
 
-const Home: NextPage = () => {
+const Home: Page = () => {
   const { isError, isLoading, isSuccess, userData, error, status } =
     useUserInfo();
   return (

@@ -6,7 +6,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import type { NextPage } from "next";
 import Navigation from "../Layout/Navigation";
 import Divider from "@mui/material/Divider";
 import { useState } from "react";
@@ -15,8 +14,9 @@ import useUserPets from "../hooks/useUserPets";
 import PetCard from "../components/PetCard";
 import useGetSavedPets from "../hooks/useGetSavedPets";
 import { useRouter } from "next/router";
+import type { Page } from "../types/types";
 
-const SearchPage: NextPage = () => {
+const SearchPage: Page = () => {
   const router = useRouter();
   const { data, status } = useSession({
     required: true,

@@ -16,9 +16,10 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { ChangeEvent, useState } from "react";
 import Navigation from "../Layout/Navigation";
+import type { Page } from "../types/types";
 import axiosClient from "../utils/axiosClient";
 
-const ContactUs = () => {
+const ContactUs: Page = () => {
   const router = useRouter();
   const { data, status } = useSession({
     required: true,

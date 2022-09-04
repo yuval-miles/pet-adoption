@@ -28,6 +28,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useS3Upload } from "../hooks/useS3Upload";
 import { useSearchUser } from "../hooks/useSearchUser";
 import { useDebounce } from "../hooks/useDebounce";
+import type { Page } from "../types/types";
 
 interface ChipData {
   key: number;
@@ -56,7 +57,7 @@ const inputSchema = z.object({
 
 type PetDataType = z.infer<typeof inputSchema>;
 
-const AddpetPage: NextPage = () => {
+const AddpetPage: Page = () => {
   const router = useRouter();
   useSession({
     required: true,
