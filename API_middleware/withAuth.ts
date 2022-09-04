@@ -16,8 +16,6 @@ const withAuth = (
 ) => {
   return async (req: ResponseWithToken, res: NextApiResponse<any>) => {
     const token = await getToken({ req });
-    console.log(token);
-    console.log(process.env.NEXTAUTH_SECRET);
     if (token) {
       if (options?.privateRoute && token.role !== "admin") {
         if (req.method === "GET") {
