@@ -21,6 +21,7 @@ const useChat = () => {
     changeAdminRoomState,
     changeUserRoomState,
     clearUserRoom,
+    setRefetchUserRoom,
   } = useChatStore(
     (state) => ({
       setUserRoom: state.setUserRoom,
@@ -31,6 +32,7 @@ const useChat = () => {
       changeUserRoomState: state.changeUserRoomState,
       changeAdminRoomState: state.changeAdminRoomState,
       clearUserRoom: state.clearUserRoom,
+      setRefetchUserRoom: state.setRefeshUserRoom,
     }),
     shallow
   );
@@ -47,7 +49,10 @@ const useChat = () => {
       refetchOnWindowFocus: false,
       enabled: false,
       onSuccess: (data) => {
+        if (pusher.allChannels().length)
+          pusher.allChannels().map((el) => pusher.unsubscribe(el.name));
         setAdminRooms(data.response);
+        setRefetchUserRoom(getAdminRooms);
         data.response.forEach((room, idx) => {
           const channel = pusher.subscribe(`userChat-id-${room.userId}`);
           channel.bind(

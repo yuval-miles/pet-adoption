@@ -6,6 +6,7 @@ interface ChatStoreType {
   chatState: {
     adminRooms: RoomResponse[];
     userRoom: RoomResponse | {};
+    refeshUserRooms: Function | null;
   };
   setAdminRooms: (adminRooms: RoomResponse[]) => void;
   setUserRoom: (userMessages: RoomResponse) => void;
@@ -18,12 +19,14 @@ interface ChatStoreType {
   ) => void;
   changeUserRoomState: (roomState: "Open" | "Closed" | "Banned") => void;
   clearUserRoom: () => void;
+  setRefeshUserRoom: (refetch: Function) => void;
 }
 
 export const useChatStore = create<ChatStoreType>((set) => ({
   chatState: {
     adminRooms: [],
     userRoom: {},
+    refeshUserRooms: null,
   },
   setAdminRooms: (adminRooms) =>
     set((state) => ({
@@ -69,11 +72,20 @@ export const useChatStore = create<ChatStoreType>((set) => ({
       const newState = _.cloneDeep(state);
       if ("messages" in newState.chatState.userRoom)
         newState.chatState.userRoom.messages.unshift(message);
+      else {
+        const newRoom = { messages: [message] };
+        newState.chatState.userRoom = newRoom;
+      }
       return newState;
     }),
   clearUserRoom: () =>
     set((state) => ({
       ...state,
       chatState: { ...state.chatState, userRoom: {} },
+    })),
+  setRefeshUserRoom: (refetch: Function) =>
+    set((state) => ({
+      ...state,
+      chatState: { ...state.chatState, refeshUserRooms: refetch },
     })),
 }));

@@ -10,6 +10,8 @@ import {
 import { RoomResponse } from "../../../types/types";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { useChatStore } from "../../../store/chat";
 
 const ChatList = ({
   rooms,
@@ -20,6 +22,7 @@ const ChatList = ({
 }) => {
   const [page, setPage] = useState<"Banned" | "Open" | "Closed">("Open");
   const [currentRooms, setCurrentRooms] = useState<RoomResponse[]>([]);
+  const refresh = useChatStore((state) => state.chatState.refeshUserRooms);
   const handleToggle = (
     event: React.MouseEvent<HTMLElement>,
     newFilter: "Open" | "Closed" | "Banned"
@@ -31,32 +34,43 @@ const ChatList = ({
   useEffect(() => {
     setCurrentRooms(rooms.filter((el) => el.status === page));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [rooms, page]);
   return (
     <>
-      <ToggleButtonGroup
-        value={page}
-        exclusive
-        onChange={handleToggle}
-        aria-label="filter"
-        color={"primary"}
-      >
-        <ToggleButton value="Open" aria-label="open">
-          <Stack direction={"row"} gap={2}>
-            <Typography>Open Chats</Typography>
+      <Stack direction={"row"} justifyContent={"space-between"}>
+        <ToggleButtonGroup
+          value={page}
+          exclusive
+          onChange={handleToggle}
+          aria-label="filter"
+          color={"primary"}
+        >
+          <ToggleButton value="Open" aria-label="open">
+            <Stack direction={"row"} gap={2}>
+              <Typography>Open Chats</Typography>
+            </Stack>
+          </ToggleButton>
+          <ToggleButton value="Closed" aria-label="closed">
+            <Stack direction={"row"} gap={2}>
+              <Typography>Closed Chats</Typography>
+            </Stack>
+          </ToggleButton>
+          <ToggleButton value="Banned" aria-label="banned">
+            <Stack direction={"row"} gap={2}>
+              <Typography>Banned Users</Typography>
+            </Stack>
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <Button
+          variant="outlined"
+          onClick={() => typeof refresh === "function" && refresh()}
+        >
+          <Stack gap={1} alignItems={"center"} direction={"row"}>
+            <Typography>Refresh rooms</Typography>
+            <RefreshIcon />
           </Stack>
-        </ToggleButton>
-        <ToggleButton value="Closed" aria-label="closed">
-          <Stack direction={"row"} gap={2}>
-            <Typography>Closed Chats</Typography>
-          </Stack>
-        </ToggleButton>
-        <ToggleButton value="Banned" aria-label="banned">
-          <Stack direction={"row"} gap={2}>
-            <Typography>Banned Users</Typography>
-          </Stack>
-        </ToggleButton>
-      </ToggleButtonGroup>
+        </Button>
+      </Stack>
       {currentRooms.length ? (
         <>
           <Stack
