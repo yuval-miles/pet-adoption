@@ -20,6 +20,7 @@ const useChat = () => {
     changeRoomStatus,
     changeAdminRoomState,
     changeUserRoomState,
+    clearUserRoom,
   } = useChatStore(
     (state) => ({
       setUserRoom: state.setUserRoom,
@@ -29,6 +30,7 @@ const useChat = () => {
       setAdminRooms: state.setAdminRooms,
       changeUserRoomState: state.changeUserRoomState,
       changeAdminRoomState: state.changeAdminRoomState,
+      clearUserRoom: state.clearUserRoom,
     }),
     shallow
   );
@@ -109,8 +111,10 @@ const useChat = () => {
       getAdminRooms();
     else if (status === "authenticated" && userData.role === "user")
       getUserRoom();
-    else if (status === "unauthenticated")
+    else if (status === "unauthenticated") {
       pusher.allChannels().map((el) => pusher.unsubscribe(el.name));
+      clearUserRoom();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   useEffect(() => {

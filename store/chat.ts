@@ -17,6 +17,7 @@ interface ChatStoreType {
     roomIdx: number
   ) => void;
   changeUserRoomState: (roomState: "Open" | "Closed" | "Banned") => void;
+  clearUserRoom: () => void;
 }
 
 export const useChatStore = create<ChatStoreType>((set) => ({
@@ -70,4 +71,9 @@ export const useChatStore = create<ChatStoreType>((set) => ({
         newState.chatState.userRoom.messages.unshift(message);
       return newState;
     }),
+  clearUserRoom: () =>
+    set((state) => ({
+      ...state,
+      chatState: { ...state.chatState, userRoom: {} },
+    })),
 }));
