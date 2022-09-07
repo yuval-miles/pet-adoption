@@ -18,7 +18,11 @@ const withAuth = (
     const token = await getToken({ req });
     if (token) {
       if (options?.privateRoute && token.role !== "admin") {
-        if (req.method === "GET") {
+        if (
+          req.method === "GET" ||
+          req.url?.startsWith("/api/users/updateuser/")
+        ) {
+          console.log(req.query.userId);
           if (req.query.userId !== (token.id as string)) {
             throw new Error("Unauthorized");
           }
